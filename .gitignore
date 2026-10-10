@@ -6,10 +6,15 @@ dist/
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts
+
+# Local environment files
 .env
+.env.*
+!.env.example
 
 # Python / backend
 .venv/
+.venv-*/
 venv/
 __pycache__/
 *.py[cod]
