@@ -3,7 +3,7 @@ name: CI and GitHub Pages
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [develop]
 
 permissions:
   contents: read
@@ -42,13 +42,13 @@ jobs:
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
       - uses: actions/upload-pages-artifact@v3
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
         with:
           path: frontend/dist
 
   deploy-pages:
     name: Deploy GitHub Pages
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     needs: [backend-tests, frontend-tests-and-build]
     runs-on: ubuntu-latest
     permissions:
