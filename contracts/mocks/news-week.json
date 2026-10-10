@@ -1,0 +1,16 @@
+{"items":[{"id":"0199d9ea-8af8-7e7b-b631-3bcb04a8b901","title":"Mercado acompanha decisão de juros","summary":"Investidores acompanham os próximos dados econômicos.","published_at":"2026-10-10T08:00:00-03:00","source_name":"Agência Exemplo","url":null,"source":"synthetic"},{"id":"0199d9ea-8af8-7e7b-b631-3bcb04a8b902","title":"Setor de fundos divulga novos indicadores","summary":"Gestores avaliam o comportamento recente dos mercados.","published_at":"2026-10-08T11:00:00-03:00","source_name":"Agência Exemplo","url":null,"source":"synthetic"}],"meta":{"page":1,"page_size":25,"total":2,"total_pages":1}}
+{
+  "items": [
+    { "id": "00000000-0000-0000-0000-000000005001", "title": "Mercado acompanha decisão de juros", "summary": "Investidores acompanham os próximos dados econômicos.", "published_at": "2026-10-10T08:00:00Z", "source_name": "Agência Exemplo", "url": null, "source": "news" },
+    { "id": "00000000-0000-0000-0000-000000005002", "title": "Setor de fundos divulga novos indicadores", "summary": "Gestores avaliam o comportamento recente dos mercados.", "published_at": "2026-10-08T11:00:00Z", "source_name": "Agência Exemplo", "url": null, "source": "news" }
+  ],
+  "page": 1,
+  "page_size": 20,
+  "total": 2
+  "period": "week",
+  "as_of": "2026-10-10T12:00:00Z",
+  "items": [
+    { "id": "news-2026-10-10-01", "title": "Mercados acompanham dados econômicos", "published_at": "2026-10-10T10:00:00Z", "source": "synthetic" },
+    { "id": "news-2026-10-08-01", "title": "Agenda econômica da semana", "published_at": "2026-10-08T09:00:00Z", "source": "synthetic" }
+  ]
+}

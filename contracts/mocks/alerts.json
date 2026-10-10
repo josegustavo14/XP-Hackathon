@@ -1,0 +1,10 @@
+{
+  "items": [
+    { "id": "00000000-0000-0000-0000-000000002001", "client_id": "00000000-0000-0000-0000-000000000001", "type": "concentration", "priority": "high", "status": "open", "title": "Concentração em renda fixa", "description": "A carteira está concentrada em uma classe de ativos.", "source_refs": [{ "type": "position", "id": "00000000-0000-0000-0000-000000001001", "label": "Tesouro IPCA+ 2029", "updated_at": "2026-10-10T09:00:00Z" }] },
+    { "id": "00000000-0000-0000-0000-000000002002", "client_id": "00000000-0000-0000-0000-000000000001", "type": "idle_cash", "priority": "medium", "status": "open", "title": "Caixa sem alocação", "description": "Há saldo disponível aguardando decisão de alocação.", "source_refs": [{ "type": "position", "id": "00000000-0000-0000-0000-000000001003", "label": "Conta corrente", "updated_at": "2026-10-10T09:00:00Z" }] },
+    { "id": "00000000-0000-0000-0000-000000002003", "client_id": "00000000-0000-0000-0000-000000000002", "type": "news_impact", "priority": "low", "status": "reviewed", "title": "Notícia com possível impacto", "description": "Notícia marcada para acompanhamento.", "source_refs": [{ "type": "news", "id": "00000000-0000-0000-0000-000000005001", "label": "Mercado acompanha decisão de juros", "updated_at": "2026-10-10T08:00:00Z" }] }
+  ],
+  "page": 1,
+  "page_size": 20,
+  "total": 3
+}
