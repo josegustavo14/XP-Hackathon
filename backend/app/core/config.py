@@ -1,6 +1,8 @@
 from functools import lru_cache
 from typing import Literal
+from uuid import UUID
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 API_V1_PREFIX = "/api/v1"
@@ -24,6 +26,25 @@ class Settings(BaseSettings):
     supabase_url: str = "http://localhost:54321"
     supabase_jwt_secret: str = ""
     supabase_jwt_audience: str = "authenticated"
+
+    # Demonstração local; não substitui o Supabase Auth em ambientes reais.
+    auth_mode: Literal["supabase", "mock"] = "supabase"
+    mock_auth_email: str = "assessor@demo.com"
+    mock_auth_password: str = "string"
+    mock_auth_advisor_id: UUID = UUID("00000000-0000-4000-8000-000000000001")
+    mock_auth_advisor_name: str = "Assessor Demo"
+    local_jwt_secret: str = "change-me-for-local-demo-only-32chars"
+    auth_token_expires_in: int = 3600
+
+    @model_validator(mode="after")
+    def validate_auth_mode(self) -> "Settings":
+        if self.env == "production" and self.auth_mode == "mock":
+            raise ValueError("AUTH_MODE=mock não é permitido em produção.")
+        if self.auth_token_expires_in <= 0:
+            raise ValueError("AUTH_TOKEN_EXPIRES_IN deve ser maior que zero.")
+        if self.auth_mode == "mock" and len(self.local_jwt_secret) < 32:
+            raise ValueError("LOCAL_JWT_SECRET deve ter pelo menos 32 caracteres em modo mock.")
+        return self
 
     @property
     def cors_origins_list(self) -> list[str]:
