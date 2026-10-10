@@ -1,8 +1,38 @@
 import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { ArrowRight, FileSearch, Sparkles } from "lucide-react";
+import { useStore } from "./store.js";
 
-export const SUGGESTIONS = ["Quais clientes precisam de atenção?", "Quais são os vencimentos próximos?", "Quais clientes têm concentração?", "Resuma a situação da Mariana Costa"];
+// Fontes consultadas e atalhos que acompanham cada resposta do copiloto.
+function AnswerExtras({ sources = [], actions = [], compact }) {
+  const { go } = useStore();
+  if (!sources.length && !actions.length) return null;
+  return (
+    <div className="mt-3 border-t border-slate-200 pt-2.5">
+      {sources.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <FileSearch className="h-3.5 w-3.5 text-slate-400" aria-label="Fontes" />
+          {sources.map((s) => (
+            <span key={s} className="rounded-md bg-surface px-1.5 py-0.5 text-[10px] font-medium text-slate-500 ring-1 ring-slate-200">{s}</span>
+          ))}
+        </div>
+      )}
+      {actions.length > 0 && (
+        <div className={`flex flex-wrap gap-2 ${sources.length ? "mt-2.5" : ""}`}>
+          {actions.map(([label, page, params]) => (
+            <button
+              key={label}
+              onClick={() => go(page, params)}
+              className={`inline-flex items-center gap-1 rounded-lg bg-surface px-2.5 py-1.5 font-semibold text-slate-800 ring-1 ring-slate-200 transition-colors hover:ring-slate-300 ${compact ? "text-[11px]" : "text-xs"}`}
+            >
+              {label} <ArrowRight className="h-3 w-3" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Lista de mensagens com rolagem automática e indicador de "digitando".
 // Usada na página do copiloto e no painel flutuante.
@@ -27,6 +57,7 @@ export function ChatThread({ chat, typing, compact = false, empty }) {
             }`}
           >
             {m.text}
+            {m.who === "bot" && <AnswerExtras sources={m.sources} actions={m.actions} compact={compact} />}
           </motion.div>
         ))}
         {typing && (

@@ -3,12 +3,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Maximize2, Send, Sparkles, X } from "lucide-react";
 import { useStore } from "./store.js";
 import { Badge } from "./ui.jsx";
-import { ChatThread, CopilotMark, SUGGESTIONS } from "./chat.jsx";
+import { ChatThread, CopilotMark } from "./chat.jsx";
+import { suggestionsFor } from "./copilot.js";
 
 // Botão flutuante no canto inferior direito que abre um chat rápido com o copiloto
 // sem sair da tela atual. A conversa é a mesma da página "Copiloto IA".
 export default function CopilotWidget() {
-  const { chat, ask, typing, go, copilotOpen: open, setCopilotOpen: setOpen } = useStore();
+  const { chat, ask, typing, go, page, params, alerts, copilotOpen: open, setCopilotOpen: setOpen } = useStore();
+  const { context, items: suggestions } = suggestionsFor(page, params, alerts);
   const [hover, setHover] = useState(false);
   const [input, setInput] = useState("");
   const inputRef = useRef(null);
@@ -49,7 +51,7 @@ export default function CopilotWidget() {
                   <h2 className="text-sm font-semibold text-slate-900">Copiloto IA</h2>
                   <Badge>Demonstração</Badge>
                 </div>
-                <p className="truncate text-[11px] text-slate-500">Consulta apenas a base fictícia</p>
+                <p className="truncate text-[11px] text-slate-500">{context ? <>Contexto: <b className="font-semibold text-slate-700">{context}</b></> : "Consulta apenas a base fictícia"}</p>
               </div>
               <button
                 onClick={() => { setOpen(false); go("copilot"); }}
@@ -71,9 +73,9 @@ export default function CopilotWidget() {
               empty={
                 <div className="pt-4">
                   <p className="text-sm font-semibold text-slate-900">Como posso ajudar?</p>
-                  <p className="mb-4 mt-1 text-xs text-slate-500">Escolha uma pergunta ou escreva a sua.</p>
+                  <p className="mb-4 mt-1 text-xs text-slate-500">{context ? `Sugestões sobre ${context}, ou escreva a sua pergunta.` : "Escolha uma pergunta ou escreva a sua."}</p>
                   <div className="grid gap-2">
-                    {SUGGESTIONS.map((q, i) => (
+                    {suggestions.map((q, i) => (
                       <motion.button
                         key={q}
                         initial={{ opacity: 0, x: 10 }}
@@ -90,7 +92,16 @@ export default function CopilotWidget() {
               }
             />
 
-            <form onSubmit={(e) => { e.preventDefault(); submit(); }} className="flex gap-2 border-t border-slate-200 p-3">
+            {chat.length > 0 && (
+              <div className="flex gap-1.5 overflow-x-auto border-t border-slate-200 px-3 pt-2.5 [scrollbar-width:none]">
+                {suggestions.filter((q) => !chat.some((m) => m.who === "user" && m.text === q)).map((q) => (
+                  <button key={q} onClick={() => submit(q)} disabled={typing} className="shrink-0 rounded-full border border-slate-200 px-3 py-1.5 text-[11px] text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50">
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+            <form onSubmit={(e) => { e.preventDefault(); submit(); }} className={`flex gap-2 p-3 ${chat.length ? "" : "border-t border-slate-200"}`}>
               <input
                 ref={inputRef}
                 value={input}

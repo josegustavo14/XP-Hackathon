@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  AlertTriangle, ArrowLeft, ArrowRight, Bell, Building2, CalendarClock, Copy, Database, FileText, Landmark,
+  AlertTriangle, ArrowLeft, ArrowRight, Bell, Building2, CalendarClock, CheckCircle2, Copy, Database, FileText, Landmark,
   RotateCcw, Search, Send, ShieldCheck, Sparkles, Trash2, TrendingUp, Users, Wallet,
 } from "lucide-react";
 import { useStore } from "./store.js";
@@ -11,7 +11,8 @@ import {
 } from "./ui.jsx";
 import { ColumnChart, DonutChart, HBarList } from "./charts.jsx";
 import MarketIntelligence from "./components/MarketIntelligence.jsx";
-import { ChatThread, CopilotMark, SUGGESTIONS } from "./chat.jsx";
+import { ChatThread, CopilotMark } from "./chat.jsx";
+import { suggestionsFor } from "./copilot.js";
 import {
   assetClasses, clientById, clients, dataSources, followUpSeries, institutions, money, riskProfiles,
 } from "./data.js";
@@ -512,7 +513,9 @@ export function AlertsPage() {
   const { alerts } = useStore();
   const [type, setType] = useState("Todos");
   const [severity, setSeverity] = useState("Todas");
-  const rows = alerts.filter((x) => (type === "Todos" || x.type === type) && (severity === "Todas" || x.severity === severity));
+  const rows = alerts
+    .filter((x) => (type === "Todos" || x.type === type) && (severity === "Todas" || x.severity === severity))
+    .sort((a, b) => (a.status === "Pendente" ? 0 : 1) - (b.status === "Pendente" ? 0 : 1) || bySeverity(a, b));
   const pending = alerts.filter((x) => x.status === "Pendente");
 
   return (
@@ -527,7 +530,7 @@ export function AlertsPage() {
       <Card className="mt-5">
         <SectionHead
           title="Fila de alertas"
-          subtitle={`${rows.length} de ${alerts.length} alertas`}
+          subtitle={`${rows.length} de ${alerts.length} alertas · pendentes primeiro, por gravidade`}
           action={
             <div className="flex w-full gap-2 sm:w-auto">
               <Select label="Tipo de alerta" value={type} onChange={setType} options={["Todos", "Concentração", "Vencimento", "Oportunidade", "Relacionamento"]} />
@@ -542,21 +545,29 @@ export function AlertsPage() {
 }
 
 export function AlertDetail() {
-  const { params, alerts, go, toggleAlert } = useStore();
+  const { params, alerts, go, toggleAlert, askCopilot } = useStore();
   const toast = useToast();
   const x = alerts.find((a) => a.id === +params) || alerts[0];
   const cl = clientById(x.cid);
+  const done = x.status === "Analisado";
+  const pendingLeft = alerts.filter((a) => a.status === "Pendente" && a.id !== x.id).sort(bySeverity);
+  const next = pendingLeft[0];
+
+  function markDone() {
+    toggleAlert(x.id);
+    toast(done ? "Alerta reaberto" : "Alerta marcado como analisado");
+  }
 
   return (
     <>
-      <PageTitle kicker="Monitoramento / Detalhe do alerta" title={x.title} lead="Analise evidências e decida como acompanhar a situação." action={<Button onClick={() => go("alerts")}><ArrowLeft className="h-3.5 w-3.5" /> Voltar à central</Button>} />
+      <PageTitle kicker="Monitoramento / Detalhe do alerta" title={x.title} lead={`${cl.name} · ${x.type} · identificado em ${x.date}`} action={<Button onClick={() => go("alerts")}><ArrowLeft className="h-3.5 w-3.5" /> Voltar à fila</Button>} />
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(290px,.8fr)]">
         <Card>
           <div className="flex flex-wrap gap-2">
             <Badge tone={severityTone(x.severity)}>{x.severity} prioridade</Badge>
             <Badge>{x.type}</Badge>
             <motion.span key={x.status} initial={{ scale: 0.7 }} animate={{ scale: 1 }} transition={{ type: "spring" }}>
-              <Badge tone={x.status === "Analisado" ? "green" : "neutral"}>{x.status}</Badge>
+              <Badge tone={done ? "green" : "neutral"}>{x.status}</Badge>
             </motion.span>
           </div>
           <h2 className="mt-7 text-lg font-semibold">O que foi identificado</h2>
@@ -564,12 +575,32 @@ export function AlertDetail() {
           <h2 className="mt-7 text-lg font-semibold">Dados utilizados</h2>
           <p className="mb-4 mt-2 text-sm text-slate-500">{x.source}</p>
           <Helper>O alerta serve como apoio à análise. Qualquer orientação financeira depende da avaliação do assessor, perfil do cliente e regras aplicáveis.</Helper>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Button variant="primary" onClick={() => go("profile", x.cid)}>Abrir cliente</Button>
-            <Button onClick={() => { toggleAlert(x.id); toast("Status do alerta atualizado"); }}>
-              {x.status === "Pendente" ? "Marcar como analisado" : "Reabrir alerta"}
-            </Button>
-          </div>
+
+          <AnimatePresence mode="wait" initial={false}>
+            {done ? (
+              <motion.div key="done" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-6 rounded-xl border border-slate-200 bg-emerald-50 p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-emerald-700">
+                  <CheckCircle2 className="h-4 w-4" /> Alerta analisado
+                </p>
+                <p className="mt-1 text-xs text-slate-600">
+                  {next ? `Próximo da fila: ${next.title} · ${clientById(next.cid).name}` : "Todos os alertas da fila foram analisados."}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  {next ? (
+                    <Button variant="primary" onClick={() => go("alertDetail", next.id)}>Próximo alerta <ArrowRight className="h-3.5 w-3.5" /></Button>
+                  ) : (
+                    <Button variant="primary" onClick={() => go("dashboard")}>Voltar ao início</Button>
+                  )}
+                  <Button variant="ghost" onClick={markDone}><RotateCcw className="h-3.5 w-3.5" /> Reabrir</Button>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div key="todo" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-6 flex flex-wrap gap-3">
+                <Button variant="primary" onClick={markDone}><CheckCircle2 className="h-3.5 w-3.5" /> Marcar como analisado</Button>
+                <Button onClick={() => askCopilot(`Explique o alerta “${x.title}”`)}><Sparkles className="h-3.5 w-3.5" /> Perguntar ao copiloto</Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Card>
         <Card>
           <SectionHead title="Cliente relacionado" />
@@ -577,9 +608,15 @@ export function AlertDetail() {
           <p className="text-sm text-slate-500">{cl.risk} • {cl.city}</p>
           <dl className="mt-7 grid grid-cols-2 gap-4">
             <div><dt className="text-[11px] text-slate-500">Patrimônio</dt><dd className="text-sm font-bold">{money(cl.wealth)}</dd></div>
-            <div><dt className="text-[11px] text-slate-500">Data do alerta</dt><dd className="text-sm font-bold">{x.date}</dd></div>
+            <div><dt className="text-[11px] text-slate-500">Próximo contato</dt><dd className="text-sm font-bold">{cl.contact}</dd></div>
           </dl>
-          <Button className="mt-6" onClick={() => go("briefing", x.cid)}>Preparar briefing</Button>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button onClick={() => go("profile", cl.id)}>Abrir cliente</Button>
+            <Button onClick={() => go("briefing", cl.id)}><FileText className="h-3.5 w-3.5" /> Preparar briefing</Button>
+          </div>
+          <p className="mt-6 border-t border-slate-100 pt-4 text-xs text-slate-500">
+            {pendingLeft.length ? `${pendingLeft.length} outro(s) alerta(s) pendente(s) na fila.` : "Nenhum outro alerta pendente."}
+          </p>
         </Card>
       </div>
     </>
@@ -621,7 +658,7 @@ export function Copilot() {
         <Card>
           <SectionHead title="Perguntas sugeridas" subtitle="Escolha uma consulta para testar o copiloto." />
           <div className="mb-4 grid gap-2">
-            {SUGGESTIONS.map((q) => (
+            {suggestionsFor("copilot").items.map((q) => (
               <motion.button key={q} whileHover={{ x: 4 }} onClick={() => submit(q)} className="flex items-center justify-between rounded-lg border border-slate-200 bg-surface px-3.5 py-3 text-left text-xs text-slate-600 hover:border-slate-300">
                 {q} <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
               </motion.button>

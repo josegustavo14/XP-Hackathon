@@ -73,10 +73,12 @@ export function PageTitle({ kicker, title, lead, action }) {
     <div className="mb-7">
       <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{kicker}</p>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-[29px]">{title}</h1>
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-[29px]">{title}</h1>
+          {lead && <p className="mt-2 text-[13px] text-slate-500">{lead}</p>}
+        </div>
         {action}
       </div>
-      {lead && <p className="mt-2 text-[13px] text-slate-500">{lead}</p>}
     </div>
   );
 }

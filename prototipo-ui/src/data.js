@@ -57,11 +57,3 @@ export const dataSources = [
 export const money = (n) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 export const clientById = (id) => clients.find((x) => x.id === +id) || clients[0];
 
-export function copilotResponse(q) {
-  const low = q.toLowerCase();
-  if (/venciment/.test(low)) return "Encontrei 1 vencimento próximo na base demonstrativa:\n\n• Ricardo Almeida — CDB com vencimento em 7 dias.\n\nFonte: alerta #2, posições simuladas de 09/10/2026. Abra o perfil e valide as informações antes do contato.";
-  if (/concentra|risco/.test(low)) return "Há alertas de concentração para:\n\n• Mariana Costa — exposição elevada a crédito privado (42% segundo o cenário fictício).\n• João Ferreira — possível concentração por emissor.\n\nFonte: alertas #1 e #5. Estes indicadores não representam aconselhamento automático.";
-  if (/mariana/.test(low)) return "Mariana Costa | Perfil moderado\nPatrimônio simulado: R$ 1.280.000\nObjetivo: aposentadoria em 2045\n2 alertas cadastrados: concentração em crédito privado e revisão trimestral.\nPróximo contato: 14/10/2026.\n\nFontes: cadastro, carteira e CRM fictícios.";
-  if (/prioridad|atenç|cliente/.test(low)) return "As prioridades sugeridas, com base nos alertas ainda abertos, são:\n\n1. Mariana Costa — concentração em crédito privado.\n2. Ricardo Almeida — vencimento próximo.\n3. Carlos Rocha — saldo disponível para avaliação.\n\nCritério: severidade cadastrada e status pendente. Dados sintéticos.";
-  return "Posso ajudar a consultar riscos, vencimentos, prioridades e perfis dos clientes desta demonstração. Tente perguntar: “Quais clientes têm concentração?” ou “Resuma Mariana Costa”.\n\nNão tenho acesso a dados externos e não faço recomendações de investimento.";
-}

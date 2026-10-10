@@ -3,7 +3,8 @@ import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { Bell, Database, FileText, LayoutDashboard, Menu, Search, Settings as SettingsIcon, Sparkles, Users, X } from "lucide-react";
 import { StoreContext, loadJSON, saveJSON } from "./store.js";
 import { ThemeToggle, ToastProvider } from "./ui.jsx";
-import { copilotResponse, defaultAlerts, defaultNotes } from "./data.js";
+import { defaultAlerts, defaultNotes } from "./data.js";
+import { copilotResponse } from "./copilot.js";
 import CopilotWidget from "./CopilotWidget.jsx";
 import {
   AlertDetail, AlertsPage, Briefing, Briefings, ClientsPage, Copilot, Dashboard, Finance, Login, Logo, Profile, Settings, Sources,
@@ -72,12 +73,12 @@ export default function App() {
       setChat((c) => [...c, { who: "user", text: q }]);
       setTyping(true);
       setTimeout(() => {
-        setChat((c) => [...c, { who: "bot", text: copilotResponse(q) }]);
+        setChat((c) => [...c, { who: "bot", ...copilotResponse(q, { alerts, notes }) }]);
         setTyping(false);
       }, 900);
       return true;
     },
-    [typing]
+    [typing, alerts, notes]
   );
 
   useEffect(() => saveJSON("xp-alerts", alerts), [alerts]);
@@ -109,6 +110,11 @@ export default function App() {
       typing,
       copilotOpen,
       setCopilotOpen,
+      // Abre o painel do copiloto já com uma pergunta (ex.: a partir de um alerta).
+      askCopilot: (q) => {
+        setCopilotOpen(true);
+        ask(q);
+      },
       toggleAlert: (id) => setAlerts((list) => list.map((a) => (a.id === id ? { ...a, status: a.status === "Pendente" ? "Analisado" : "Pendente" } : a))),
       addNote: (n) => setNotes((list) => [n, ...list]),
       resetDemo: () => {
