@@ -1,0 +1,241 @@
+erDiagram
+    ADVISORS ||--o{ CLIENTS : atende
+    ADVISORS ||--o{ INTERACTIONS : registra
+    ADVISORS |o--o{ ALERTS : revisa
+    ADVISORS ||--o{ AI_LOGS : consulta
+    ADVISORS ||--o{ GOALS : define
+
+    CLIENTS ||--o{ POSITIONS : possui
+    CLIENTS ||--o{ OPEN_FINANCE_CONSENTS : concede
+    CLIENTS ||--o{ GOALS : "pode ter"
+    CLIENTS ||--o{ INTERACTIONS : participa
+    CLIENTS ||--o{ ACTION_ITEMS : "tem pendencias"
+    CLIENTS ||--o{ ALERTS : recebe
+    CLIENTS |o--o{ AI_LOGS : "e assunto de"
+
+    ISSUERS |o--o{ ASSETS : emite
+    ASSETS ||--o{ POSITIONS : compoe
+    INSTITUTIONS ||--o{ POSITIONS : custodia
+    INSTITUTIONS ||--o{ OPEN_FINANCE_CONSENTS : "fonte de"
+    OPEN_FINANCE_CONSENTS |o--o{ POSITIONS : autoriza
+
+    INTERACTIONS |o--o{ ACTION_ITEMS : gera
+    ALERT_RULES ||--o{ ALERTS : origina
+
+    CLIENTS ||--o{ BRIEFINGS : "preparado para"
+    ADVISORS ||--o{ BRIEFINGS : gera
+    AI_LOGS |o--o{ BRIEFINGS : "chamada da IA"
+    INTERACTIONS |o--o| BRIEFINGS : "reuniao realizada"
+    NEWS_ARTICLES ||--o{ NEWS_CLIENT_IMPACTS : afeta
+    CLIENTS ||--o{ NEWS_CLIENT_IMPACTS : "impactado por"
+    CLIENTS ||--o{ PORTFOLIO_SNAPSHOTS : "historico patrimonial"
+    CLIENTS ||..o{ AUDIT_LOG : "historico (sem FK)"
+    ADVISORS |o..o{ AUDIT_LOG : "autor (sem FK)"
+
+    ADVISORS {
+        uuid id PK "FK auth.users"
+        text full_name
+        text email UK
+        text office
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    CLIENTS {
+        uuid id PK
+        uuid advisor_id FK
+        text full_name
+        date birthday
+        text city
+        char state
+        risk_profile risk_profile "conservative | moderate | aggressive"
+        date suitability_expires_at
+        smallint investment_horizon_yrs
+        text liquidity_need
+        jsonb preferences
+        timestamptz last_contact_at
+        timestamptz next_contact_at
+        numeric net_worth "so Open Finance escreve"
+        timestamptz net_worth_updated_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    INSTITUTIONS {
+        uuid id PK
+        text name UK
+        boolean is_xp
+    }
+    ISSUERS {
+        uuid id PK
+        text name UK
+        issuer_type type "government | bank | company | fund_manager"
+    }
+    ASSETS {
+        uuid id PK
+        text code UK
+        text name
+        asset_class asset_class
+        uuid issuer_id FK
+        smallint risk_level "1 a 5"
+        date maturity_date
+        text indexer
+        numeric rate
+        boolean fgc_covered
+        timestamptz updated_at
+    }
+    OPEN_FINANCE_CONSENTS {
+        uuid id PK
+        uuid client_id FK
+        uuid institution_id FK
+        consent_status status
+        text_array scopes
+        timestamptz granted_at
+        timestamptz expires_at
+        timestamptz updated_at
+    }
+    POSITIONS {
+        uuid id PK
+        uuid client_id FK
+        uuid asset_id FK
+        uuid institution_id FK
+        data_source source "xp | open_finance"
+        uuid consent_id FK "obrigatorio se open_finance"
+        numeric quantity
+        numeric invested_value
+        numeric market_value
+        date held_since
+        date as_of
+        timestamptz updated_at
+    }
+    GOALS {
+        uuid id PK
+        uuid client_id FK
+        uuid advisor_id FK "quem definiu"
+        text title
+        numeric target_amount
+        date target_date
+        goal_status status
+        text notes
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    INTERACTIONS {
+        uuid id PK
+        uuid client_id FK
+        uuid advisor_id FK
+        timestamptz occurred_at
+        interaction_channel channel
+        text summary
+        text decisions
+        vector embedding "pgvector 1024"
+        timestamptz created_at
+    }
+    ACTION_ITEMS {
+        uuid id PK
+        uuid client_id FK
+        uuid interaction_id FK
+        text description
+        date due_date
+        timestamptz done_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    ALERT_RULES {
+        alert_type type PK
+        text description
+        jsonb params "limites da regra"
+        boolean enabled
+        timestamptz updated_at
+    }
+    ALERTS {
+        uuid id PK
+        uuid client_id FK
+        alert_type type FK
+        alert_priority priority "low | medium | high"
+        text title
+        jsonb evidence
+        jsonb rule_params "limites usados no alerta"
+        text dedupe_key "unico enquanto ativo"
+        alert_status status "open | reviewed | dismissed | resolved"
+        uuid reviewed_by FK
+        timestamptz reviewed_at
+        text review_note
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz closed_at
+    }
+    AI_LOGS {
+        uuid id PK
+        uuid advisor_id FK
+        uuid client_id FK
+        ai_log_kind kind "chat | briefing | alert_explanation | news_relevance"
+        text prompt
+        text response
+        jsonb tool_calls
+        jsonb sources
+        text model
+        timestamptz created_at
+    }
+    AUDIT_LOG {
+        bigint id PK
+        text table_name
+        uuid record_id
+        text action "insert | update | delete"
+        jsonb changed "update: campo -> [antes, depois]"
+        uuid actor_id "null = sistema"
+        uuid client_id
+        timestamptz at
+    }
+    BRIEFINGS {
+        uuid id PK
+        uuid client_id FK
+        uuid advisor_id FK
+        timestamptz meeting_at
+        briefing_status status "draft | reviewed | used | discarded"
+        jsonb content "gerado pela IA, imutavel"
+        jsonb edited_content "revisao do assessor"
+        jsonb sources "alert_ids, news_ids, interaction_ids"
+        uuid ai_log_id FK
+        uuid interaction_id FK
+        timestamptz reviewed_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    NEWS_ARTICLES {
+        uuid id PK
+        text source
+        text url UK
+        text title
+        text summary
+        text language
+        timestamptz published_at
+        text_array tickers
+        uuid_array issuer_ids
+        asset_class_array asset_classes
+        text_array topics
+        vector embedding
+        timestamptz created_at
+    }
+    NEWS_CLIENT_IMPACTS {
+        uuid id PK
+        uuid news_id FK
+        uuid client_id FK
+        news_match_type match_type "holds_asset | issuer_exposure | asset_class | macro"
+        numeric exposure_value
+        numeric exposure_pct
+        jsonb matched
+        smallint relevance "0-100, IA"
+        text explanation "IA"
+        news_impact_status status "new | seen | dismissed"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    PORTFOLIO_SNAPSHOTS {
+        uuid client_id PK, FK
+        date snapshot_date PK
+        numeric total_value
+        numeric xp_value
+        numeric external_value
+        numeric net_worth
+        jsonb by_class
+        timestamptz created_at
+    }
