@@ -1,0 +1,9 @@
+{
+  "items": [
+    { "id": "00000000-0000-0000-0000-000000000001", "advisor_id": "00000000-0000-0000-0000-000000000101", "name": "Mariana Costa", "email": "mariana.costa@example.test" },
+    { "id": "00000000-0000-0000-0000-000000000002", "advisor_id": "00000000-0000-0000-0000-000000000101", "name": "Rafael Almeida", "email": "rafael.almeida@example.test" }
+  ],
+  "page": 1,
+  "page_size": 20,
+  "total": 2
+}
