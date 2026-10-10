@@ -1,8 +1,9 @@
 from datetime import date, datetime
+from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import CHAR, Date, DateTime, ForeignKey, SmallInteger, Text, text
+from sqlalchemy import CHAR, Date, DateTime, ForeignKey, Numeric, SmallInteger, Text, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -18,7 +19,7 @@ class Client(TimestampMixin, Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, server_default=text("gen_random_uuid()"))
     advisor_id: Mapped[UUID] = mapped_column(ForeignKey("advisors.id"))
     full_name: Mapped[str] = mapped_column(Text)
-    birth_year: Mapped[int | None] = mapped_column(SmallInteger)
+    birthday: Mapped[date | None] = mapped_column(Date)
     city: Mapped[str | None] = mapped_column(Text)
     state: Mapped[str | None] = mapped_column(CHAR(2))
     risk_profile: Mapped[RiskProfile] = mapped_column(pg_enum(RiskProfile, "risk_profile"))
@@ -28,3 +29,6 @@ class Client(TimestampMixin, Base):
     preferences: Mapped[dict[str, Any]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
     last_contact_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     next_contact_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    net_worth: Mapped[Decimal | None] = mapped_column(Numeric(18, 2))
+    net_worth_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+

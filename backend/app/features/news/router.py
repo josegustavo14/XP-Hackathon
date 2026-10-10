@@ -20,6 +20,12 @@ async def summarize_news(
     service: NewsServiceDep,
     user: CurrentUser,
 ) -> NewsSummary:
+    """Retorna conteúdo extrativo e referências aos artigos informados.
+
+    A autenticação protege a funcionalidade; o assessor nunca é recebido no
+    payload. A consulta dos artigos persistidos e o provedor LLM continuam em
+    aberto até a definição de suas respectivas integrações.
+    """
     """Gera um resumo estritamente rastreável aos artigos enviados."""
     del user
     return await service.summarize(period=period, articles=payload.articles)

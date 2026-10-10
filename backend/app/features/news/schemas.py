@@ -1,8 +1,8 @@
-"""Contratos internos de coleta, sumarização e relevância de notícias.
+"""Contratos para notícias e seus resumos.
 
-Os tipos de relevância não são contratos HTTP: a consulta pública fica para a
-issue #49. Eles permitem testar e executar as regras sem acoplar a feature a
-um provedor de IA ou a uma fonte externa.
+O ``schema.sql`` ainda não define persistência para notícias. Estes schemas
+representam a entrada da sumarização; o repositório de artigos será definido
+quando essa persistência existir.
 """
 
 from datetime import datetime
