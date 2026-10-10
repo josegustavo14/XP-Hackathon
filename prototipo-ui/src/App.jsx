@@ -6,6 +6,7 @@ import { ThemeToggle, ToastProvider } from "./ui.jsx";
 import { defaultAlerts, defaultNotes } from "./data.js";
 import { copilotResponse } from "./copilot.js";
 import CopilotWidget from "./CopilotWidget.jsx";
+import SearchPalette from "./SearchPalette.jsx";
 import {
   AlertDetail, AlertsPage, Briefing, Briefings, ClientsPage, Copilot, Dashboard, Finance, Login, Logo, Profile, Settings, Sources,
 } from "./pages.jsx";
@@ -57,6 +58,20 @@ export default function App() {
   const [typing, setTyping] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [copilotOpen, setCopilotOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Ctrl/⌘ + K abre a busca de qualquer tela.
+  useEffect(() => {
+    if (!logged) return;
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen((o) => !o);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [logged]);
   const [theme, setTheme] = useState(initialTheme);
 
   useEffect(() => {
@@ -175,10 +190,11 @@ export default function App() {
                 <div className="md:ml-64">
                   <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-slate-200 bg-surface/90 px-4 backdrop-blur sm:h-[75px] sm:gap-3 sm:px-9">
                     <button className="shrink-0 rounded-lg border border-slate-200 p-2.5 md:hidden" onClick={() => setMenuOpen(true)} aria-label="Abrir menu"><Menu className="h-4 w-4" /></button>
-                    <button onClick={() => go("clients")} className="flex min-w-0 max-w-lg flex-1 items-center gap-2 rounded-lg bg-slate-100 px-3 py-2.5 text-left text-sm text-slate-500 transition hover:bg-slate-200/70 sm:px-4">
+                    <button onClick={() => setSearchOpen(true)} aria-haspopup="dialog" className="flex min-w-0 max-w-lg flex-1 items-center gap-2 rounded-lg bg-slate-100 px-3 py-2.5 text-left text-sm text-slate-500 transition hover:bg-slate-200/70 sm:px-4">
                       <Search className="h-4 w-4 shrink-0" />
                       <span className="truncate sm:hidden">Buscar clientes...</span>
-                      <span className="hidden truncate sm:inline">Buscar clientes e informações...</span>
+                      <span className="hidden flex-1 truncate sm:inline">Buscar clientes, alertas ou telas...</span>
+                      <kbd className="font-sans hidden shrink-0 rounded-md border border-slate-200 bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 lg:block">Ctrl K</kbd>
                     </button>
                     <div className="hidden flex-1 sm:block" />
                     <ThemeToggle theme={theme} onToggle={toggleTheme} />
@@ -201,6 +217,7 @@ export default function App() {
                 </div>
 
                 {route.page !== "copilot" && <CopilotWidget />}
+                <SearchPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
 
                 <nav aria-label="Atalhos" className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
                   <div className="grid h-16 grid-cols-5">
