@@ -18,6 +18,7 @@ from app.shared.exceptions import (
     NotAuthenticatedError,
     NotFoundError,
     PermissionDeniedError,
+    ServiceUnavailableError,
 )
 
 logger = logging.getLogger("app.errors")
@@ -29,6 +30,7 @@ DOMAIN_STATUS: dict[type[DomainError], int] = {
     PermissionDeniedError: 403,
     NotFoundError: 404,
     ConflictError: 409,
+    ServiceUnavailableError: 503,
 }
 
 
