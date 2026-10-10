@@ -8,7 +8,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Numeric, SmallInteger, Text, text
+from sqlalchemy import DateTime, ForeignKey, Numeric, SmallInteger, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -60,3 +60,33 @@ class NewsClientImpact(Base):
     matched: Mapped[list[dict[str, object]]] = mapped_column(JSONB, server_default=text("'[]'"))
     relevance: Mapped[int | None] = mapped_column(SmallInteger)
     explanation: Mapped[str | None] = mapped_column(Text)
+
+
+class NewsRefreshRun(Base):
+    """Controle durável de execução do job, único por janela de coleta."""
+
+    __tablename__ = "news_refresh_runs"
+    __table_args__ = (UniqueConstraint("window_start", "window_end"),)
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, server_default=text("gen_random_uuid()"))
+    window_start: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    window_end: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    status: Mapped[str] = mapped_column(Text)
+    error: Mapped[str | None] = mapped_column(Text)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class NewsSummaryCache(Base):
+    """Resumo materializado por janela para não sumarizar no acesso ao dashboard."""
+
+    __tablename__ = "news_summary_cache"
+    __table_args__ = (UniqueConstraint("period", "window_start", "window_end"),)
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, server_default=text("gen_random_uuid()"))
+    period: Mapped[str] = mapped_column(Text)
+    window_start: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    window_end: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    summary: Mapped[str] = mapped_column(Text)
+    highlights: Mapped[list[dict[str, object]]] = mapped_column(JSONB)
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

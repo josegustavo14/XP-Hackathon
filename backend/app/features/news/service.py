@@ -34,6 +34,9 @@ class NormalizedNewsArticle:
     published_at: datetime | None
     collected_at: datetime
     topics: list[str]
+    tickers: list[str]
+    issuer_ids: list[object]
+    asset_classes: list[str]
     title_hash: str
     content_hash: str
 
@@ -103,6 +106,16 @@ def normalize_news_article(
             _compact_text(topic).casefold() for topic in article.topics if topic.strip()
         )
     )
+    tickers = list(
+        dict.fromkeys(_compact_text(ticker).upper() for ticker in article.tickers if ticker.strip())
+    )
+    asset_classes = list(
+        dict.fromkeys(
+            _compact_text(asset_class).casefold()
+            for asset_class in article.asset_classes
+            if asset_class.strip()
+        )
+    )
     timestamp = collected_at or datetime.now(UTC)
     if timestamp.tzinfo is None:
         timestamp = timestamp.replace(tzinfo=UTC)
@@ -116,6 +129,9 @@ def normalize_news_article(
         published_at=article.published_at,
         collected_at=timestamp,
         topics=topics,
+        tickers=tickers,
+        issuer_ids=list(dict.fromkeys(article.issuer_ids)),
+        asset_classes=asset_classes,
         title_hash=title_hash,
         content_hash=content_hash,
     )

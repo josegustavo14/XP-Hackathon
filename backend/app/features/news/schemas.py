@@ -24,6 +24,9 @@ class CollectedNewsArticle(ApiModel):
     url: str = Field(min_length=1)
     published_at: datetime | None = None
     topics: list[str] = Field(default_factory=list)
+    tickers: list[str] = Field(default_factory=list)
+    issuer_ids: list[UUID] = Field(default_factory=list)
+    asset_classes: list[str] = Field(default_factory=list)
     content: str | None = None
 
 
