@@ -10,8 +10,8 @@ export class ApiError extends Error {
     super(message);
     this.name = 'ApiError';
     this.status = status;
-    this.code = payload?.code;
-    this.details = payload?.details;
+    this.code = payload?.error?.code;
+    this.details = payload?.error?.details;
   }
 }
 
@@ -28,7 +28,7 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
       // A resposta pode estar vazia ou não ser JSON.
     }
-    throw new ApiError(payload?.message ?? 'Não foi possível concluir a solicitação.', response.status, payload);
+    throw new ApiError(payload?.error?.message ?? 'Não foi possível concluir a solicitação.', response.status, payload);
   }
 
   if (response.status === 204) return undefined as T;

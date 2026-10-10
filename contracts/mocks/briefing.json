@@ -1,0 +1,9 @@
+{
+  "client_id": "00000000-0000-0000-0000-000000000001",
+  "summary": "Mariana Costa tem carteira de perfil moderado, com concentração relevante em renda fixa e caixa disponível.",
+  "recommendations": ["Revisar a concentração por classe", "Discutir o destino do caixa disponível"],
+  "source_refs": [
+    { "type": "client", "id": "00000000-0000-0000-0000-000000000001", "label": "Mariana Costa", "updated_at": "2026-10-10T09:00:00Z" },
+    { "type": "alert", "id": "00000000-0000-0000-0000-000000002001", "label": "Concentração em renda fixa", "updated_at": "2026-10-10T09:00:00Z" }
+  ]
+}

@@ -25,12 +25,12 @@ export function DashboardPage() {
     <section>
       <div className="page-heading"><div><p className="eyebrow">Visão geral</p><h1>Dashboard do assessor</h1></div></div>
       <div className="metrics">
-        <article><span>Clientes sob gestão</span><strong>{data.clientCount}</strong></article>
-        <article><span>Patrimônio acompanhado</span><strong>{formatMoney(data.managedAssets)}</strong></article>
-        <article><span>Alertas ativos</span><strong>{data.activeAlerts}</strong></article>
+        <article><span>Clientes sob gestão</span><strong>{data.client_count}</strong></article>
+        <article><span>Patrimônio acompanhado</span><strong>{formatMoney(data.managed_assets)}</strong></article>
+        <article><span>Alertas ativos</span><strong>{data.open_alerts}</strong></article>
       </div>
       <div className="card"><h2>Atendimentos prioritários</h2>
-        {data.priorityClients.length === 0 ? <EmptyState /> : <ul className="client-list">{data.priorityClients.map((client) => <li key={client.id}><div><strong>{client.name}</strong><span>{client.riskProfile}</span></div><b>{formatMoney(client.netWorth)}</b></li>)}</ul>}
+        {data.priority_clients.length === 0 ? <EmptyState /> : <ul className="client-list">{data.priority_clients.map((client) => <li key={client.id}><div><strong>{client.name}</strong><span>{client.risk_profile}</span></div><b>{formatMoney(client.total_assets)}</b></li>)}</ul>}
       </div>
     </section>
   );

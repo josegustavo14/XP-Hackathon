@@ -1,4 +1,11 @@
 {
+  "items": [
+    { "id": "00000000-0000-0000-0000-000000005001", "title": "Mercado acompanha decisão de juros", "summary": "Investidores acompanham os próximos dados econômicos.", "published_at": "2026-10-10T08:00:00Z", "source_name": "Agência Exemplo", "url": null, "source": "news" },
+    { "id": "00000000-0000-0000-0000-000000005002", "title": "Setor de fundos divulga novos indicadores", "summary": "Gestores avaliam o comportamento recente dos mercados.", "published_at": "2026-10-08T11:00:00Z", "source_name": "Agência Exemplo", "url": null, "source": "news" }
+  ],
+  "page": 1,
+  "page_size": 20,
+  "total": 2
   "period": "week",
   "as_of": "2026-10-10T12:00:00Z",
   "items": [
