@@ -3,14 +3,57 @@
 Montado em `/api/v1/news` por `app.main`.
 """
 
-from fastapi import APIRouter
+from uuid import UUID
 
-from app.features.auth.dependencies import CurrentUser
+from fastapi import APIRouter, Query
+
+from app.features.auth.dependencies import AuthServiceDep, CurrentUser
 from app.features.news.dependencies import NewsServiceDep
-from app.features.news.schemas import NewsSummary, NewsSummaryPeriod, NewsSummaryRequest
+from app.features.news.schemas import (
+    NewsListResponse,
+    NewsSummary,
+    NewsSummaryPeriod,
+    NewsSummaryRequest,
+)
+from app.shared.pagination import Pagination
 from app.shared.schemas import ERROR_RESPONSES
 
 router = APIRouter(responses=ERROR_RESPONSES)
+
+
+@router.get(
+    "", response_model=NewsListResponse, summary="Listar notícias de inteligência de mercado"
+)
+async def list_news(
+    service: NewsServiceDep,
+    user: CurrentUser,
+    pagination: Pagination,
+    auth_service: AuthServiceDep,
+    period: NewsSummaryPeriod = Query(NewsSummaryPeriod.DAY),
+    client_id: UUID | None = Query(None),
+    topic: str | None = Query(None, min_length=1, max_length=100),
+) -> NewsListResponse:
+    """Lista notícias no período; o cliente, quando informado, vem da autenticação."""
+    if client_id is not None:
+        await auth_service.ensure_client_access(user.id, client_id)
+    return await service.list_feed(
+        period=period,
+        client_id=client_id,
+        topic=topic,
+        page=pagination.page,
+        page_size=pagination.page_size,
+    )
+
+
+@router.get("/summary", response_model=NewsSummary, summary="Resumo agregado de notícias")
+async def get_news_summary(
+    service: NewsServiceDep,
+    user: CurrentUser,
+    period: NewsSummaryPeriod = Query(NewsSummaryPeriod.DAY),
+) -> NewsSummary:
+    """Retorna o resumo diário ou semanal sem exigir campo de período persistido."""
+    del user
+    return await service.get_summary(period=period)
 
 
 @router.post("/summaries/{period}", response_model=NewsSummary)

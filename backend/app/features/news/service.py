@@ -2,26 +2,33 @@
 
 import unicodedata
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from hashlib import md5, sha256
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from uuid import UUID
+from zoneinfo import ZoneInfo
 
-from app.features.news.repository import NewsRepository
+from app.features.news.repository import NewsFeedRecord, NewsRepository
 from app.features.news.schemas import (
     ActiveAlertContext,
     ClientPortfolioContext,
     CollectedNewsArticle,
     NewsArticle,
     NewsHighlight,
+    NewsListItem,
+    NewsListResponse,
     NewsRelevance,
     NewsRelevanceArticle,
+    NewsRelevanceOut,
     NewsSummary,
     NewsSummaryPeriod,
 )
 from app.shared.enums import NewsMatchType
+from app.shared.schemas import PageMeta
 
 _TRACKING_PARAMETERS = {"fbclid", "gclid", "mc_cid", "mc_eid"}
+_OPERATIONAL_TIMEZONE = ZoneInfo("America/Sao_Paulo")
 
 
 @dataclass(frozen=True)
@@ -122,8 +129,14 @@ def normalize_news_article(
 
 
 class NewsService:
-    def __init__(self, repository: NewsRepository | None = None) -> None:
-        self.repository = repository
+    def __init__(self) -> None:
+        self.repository: NewsRepository | None = None
+
+    @classmethod
+    def with_repository(cls, repository: NewsRepository) -> "NewsService":
+        service = cls()
+        service.repository = repository
+        return service
 
     async def ingest(self, collected: CollectedNewsArticle) -> NewsIngestionResult:
         """Cria um artigo ou registra a recoleta seguindo a ordem contratada."""
@@ -187,6 +200,59 @@ class NewsService:
             generated_at=generated_at or datetime.now(UTC),
         )
 
+    async def list_feed(
+        self,
+        *,
+        period: NewsSummaryPeriod,
+        client_id: UUID | None,
+        topic: str | None,
+        page: int,
+        page_size: int,
+        now: datetime | None = None,
+    ) -> NewsListResponse:
+        """Consulta o feed; ``day`` e ``week`` são janelas, não atributos do artigo."""
+        start_at = self._period_start(period, now=now)
+        records, total = await self._repository().list_feed(
+            start_at=start_at,
+            client_id=client_id,
+            topic=topic.casefold() if topic else None,
+            offset=(page - 1) * page_size,
+            limit=page_size,
+        )
+        items = [self._feed_item(record) for record in records]
+        updated_at = max(
+            (record.article.collected_at for record in records),
+            default=now or datetime.now(UTC),
+        )
+        return NewsListResponse(
+            items=items,
+            meta=PageMeta.build(page=page, page_size=page_size, total=total),
+            updated_at=updated_at,
+        )
+
+    async def get_summary(
+        self, *, period: NewsSummaryPeriod, now: datetime | None = None
+    ) -> NewsSummary:
+        """Gera o resumo a partir dos artigos da janela operacional consultada."""
+        articles = await self._repository().list_for_summary(
+            start_at=self._period_start(period, now=now)
+        )
+        return await self.summarize(
+            period=period,
+            articles=[
+                NewsArticle(
+                    id=article.id,
+                    title=article.title,
+                    summary=article.summary,
+                    url=article.url,
+                    source_name=article.source,
+                    published_at=article.published_at,
+                )
+                for article in articles
+            ],
+            generated_at=now,
+        )
+
     async def assess_relevance(
         self,
         *,
@@ -230,6 +296,36 @@ class NewsService:
         if self.repository is None:
             raise RuntimeError("Esta operação requer um repositório de notícias.")
         return self.repository
+
+    @staticmethod
+    def _period_start(period: NewsSummaryPeriod, *, now: datetime | None = None) -> datetime:
+        """Usa America/Sao_Paulo até que a XP defina outro corte operacional."""
+        current = (now or datetime.now(UTC)).astimezone(_OPERATIONAL_TIMEZONE)
+        day_start = current.replace(hour=0, minute=0, second=0, microsecond=0)
+        if period is NewsSummaryPeriod.DAY:
+            return day_start
+        return day_start - timedelta(days=day_start.weekday())
+
+    @staticmethod
+    def _feed_item(record: NewsFeedRecord) -> NewsListItem:
+        article = record.article
+        relevance = None
+        if record.impact is not None:
+            relevance = NewsRelevanceOut(
+                client_id=record.impact.client_id,
+                score=(record.impact.relevance or 0) / 100,
+                reason=record.impact.explanation or "Relevância calculada para a carteira.",
+            )
+        return NewsListItem(
+            id=article.id,
+            title=article.title,
+            summary=article.summary or article.title,
+            source=article.source,
+            url=article.url,
+            published_at=article.published_at,
+            topics=article.topics or [],
+            relevance=relevance,
+        )
 
     @staticmethod
     def _relevance_evidence(

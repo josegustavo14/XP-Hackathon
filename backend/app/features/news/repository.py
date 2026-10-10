@@ -1,10 +1,11 @@
 """Persistência da feature news. Retorna models/tipos de domínio, nunca Response HTTP."""
 
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -90,3 +91,59 @@ class NewsRepository:
                 },
             )
         )
+
+    async def list_feed(
+        self,
+        *,
+        start_at: datetime,
+        client_id: UUID | None,
+        topic: str | None,
+        offset: int,
+        limit: int,
+    ) -> tuple[list["NewsFeedRecord"], int]:
+        """Lista artigos no período, com impacto apenas para o cliente consultado."""
+        filters = [func.coalesce(NewsArticle.published_at, NewsArticle.collected_at) >= start_at]
+        if topic:
+            filters.append(NewsArticle.topics.contains([topic]))
+
+        published_order = func.coalesce(NewsArticle.published_at, NewsArticle.collected_at).desc()
+        if client_id is None:
+            statement = select(NewsArticle).where(*filters).order_by(published_order)
+            count_statement = select(func.count()).select_from(NewsArticle).where(*filters)
+            articles = (await self.session.scalars(statement.offset(offset).limit(limit))).all()
+            records = [NewsFeedRecord(article=article, impact=None) for article in articles]
+        else:
+            statement = (
+                select(NewsArticle, NewsClientImpact)
+                .join(NewsClientImpact, NewsClientImpact.news_id == NewsArticle.id)
+                .where(*filters, NewsClientImpact.client_id == client_id)
+                .order_by(NewsClientImpact.relevance.desc().nullslast(), published_order)
+            )
+            count_statement = (
+                select(func.count())
+                .select_from(NewsArticle)
+                .join(NewsClientImpact, NewsClientImpact.news_id == NewsArticle.id)
+                .where(*filters, NewsClientImpact.client_id == client_id)
+            )
+            result = await self.session.execute(statement.offset(offset).limit(limit))
+            records = [
+                NewsFeedRecord(article=article, impact=impact) for article, impact in result.all()
+            ]
+
+        total = (await self.session.scalar(count_statement)) or 0
+        return records, total
+
+    async def list_for_summary(self, *, start_at: datetime) -> list[NewsArticle]:
+        """Retorna os artigos da janela para o resumo agregado do período."""
+        statement = (
+            select(NewsArticle)
+            .where(func.coalesce(NewsArticle.published_at, NewsArticle.collected_at) >= start_at)
+            .order_by(func.coalesce(NewsArticle.published_at, NewsArticle.collected_at).desc())
+        )
+        return list((await self.session.scalars(statement)).all())
+
+
+@dataclass(frozen=True)
+class NewsFeedRecord:
+    article: NewsArticle
+    impact: NewsClientImpact | None
