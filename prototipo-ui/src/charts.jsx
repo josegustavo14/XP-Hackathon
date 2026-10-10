@@ -165,7 +165,7 @@ export function ColumnChart({ data, valueLabel = "Índice", height = 200 }) {
 
   return (
     <div ref={ref} className="mt-8 flex gap-2">
-      <div className="relative w-7 shrink-0 text-right text-[10px] tabular-nums text-slate-400" style={{ height }}>
+      <div className="relative w-7 shrink-0 text-right text-[11px] tabular-nums text-slate-500" style={{ height }}>
         {ticks.map((t) => (
           <span key={t} className="absolute right-0 -translate-y-1/2" style={{ bottom: `${t}%` }}>
             {t}
@@ -229,7 +229,7 @@ export function ColumnChart({ data, valueLabel = "Índice", height = 200 }) {
         </div>
         <div className="mt-2 flex gap-1.5 sm:gap-2">
           {data.map((d, i) => (
-            <span key={d.month} className={`flex-1 truncate text-center text-[10px] ${hover === i ? "font-bold text-slate-700" : "text-slate-400"}`}>
+            <span key={d.month} className={`flex-1 truncate text-center text-[11px] ${hover === i ? "font-bold text-slate-700" : "text-slate-500"}`}>
               {data.length > 8 && i % 2 === 1 && hover !== i ? "" : d.month.slice(0, 3)}
             </span>
           ))}

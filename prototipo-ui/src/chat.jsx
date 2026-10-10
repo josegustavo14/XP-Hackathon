@@ -13,7 +13,7 @@ function AnswerExtras({ sources = [], actions = [], compact }) {
         <div className="flex flex-wrap items-center gap-1.5">
           <FileSearch className="h-3.5 w-3.5 text-slate-400" aria-label="Fontes" />
           {sources.map((s) => (
-            <span key={s} className="rounded-md bg-surface px-1.5 py-0.5 text-[10px] font-medium text-slate-500 ring-1 ring-slate-200">{s}</span>
+            <span key={s} className="rounded-md bg-surface px-1.5 py-0.5 text-[11px] font-medium text-slate-500 ring-1 ring-slate-200">{s}</span>
           ))}
         </div>
       )}

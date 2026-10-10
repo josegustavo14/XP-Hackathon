@@ -76,7 +76,7 @@ export function PageTitle({ kicker, title, lead, action, back }) {
           <ArrowLeft className="h-3.5 w-3.5" /> {back.label}
         </button>
       )}
-      <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{kicker}</p>
+      <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-500">{kicker}</p>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-[29px]">{title}</h1>
@@ -141,7 +141,7 @@ export function MobileList({ children, empty, show = true }) {
   return (
     <ul className="-mx-1 divide-y divide-slate-100 md:hidden">
       <AnimatePresence initial={false}>{children}</AnimatePresence>
-      {!show && <li className="py-10 text-center text-sm text-slate-400">{empty}</li>}
+      {!show && <li className="py-10 text-center text-sm text-slate-500">{empty}</li>}
     </ul>
   );
 }
@@ -170,7 +170,7 @@ export function TableWrap({ children, minWidth = "min-w-[640px]", desktopOnly = 
   );
 }
 
-export const Th = ({ children }) => <th className="border-b border-slate-200 px-3 py-3.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">{children}</th>;
+export const Th = ({ children }) => <th className="border-b border-slate-200 px-3 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{children}</th>;
 export const Td = ({ children, className = "" }) => <td className={`whitespace-nowrap border-b border-slate-100 px-3 py-4 ${className}`}>{children}</td>;
 
 // Linhas de tabela que entram/saem animadas ao filtrar.
@@ -189,7 +189,7 @@ export function AnimatedRow({ children, index = 0 }) {
 }
 
 export function Empty({ children, colSpan }) {
-  const content = <div className="py-12 text-center text-sm text-slate-400">{children}</div>;
+  const content = <div className="py-12 text-center text-sm text-slate-500">{children}</div>;
   return colSpan ? (
     <tr>
       <td colSpan={colSpan}>{content}</td>
@@ -240,9 +240,9 @@ export function ToastProvider({ children }) {
               initial={{ opacity: 0, y: 16, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8 }}
-              className="flex items-center gap-2 rounded-xl bg-[#1b2721] px-5 py-4 text-sm text-white shadow-2xl ring-1 ring-white/10"
+              className="flex items-center gap-2 whitespace-nowrap rounded-xl bg-slate-900 px-5 py-4 text-sm font-medium text-slate-50 shadow-2xl"
             >
-              <CheckCircle2 className="h-4 w-4 text-emerald-400" aria-hidden />
+              <CheckCircle2 className="h-4 w-4 text-emerald-300" aria-hidden />
               {toast.text}
             </motion.div>
           )}

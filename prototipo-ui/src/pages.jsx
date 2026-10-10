@@ -90,7 +90,7 @@ function AlertTable({ rows, compact = false }) {
               <Td><ClientLink id={x.cid} /></Td>
               <Td className="whitespace-normal">
                 <b className="text-slate-800">{x.title}</b>
-                <div className="mt-1 text-slate-400">{x.date}</div>
+                <div className="mt-1 text-slate-500">{x.date}</div>
               </Td>
               {!compact && <Td>{x.type}</Td>}
               <Td><Badge tone={severityTone(x.severity)}>{x.severity}</Badge></Td>
@@ -143,7 +143,7 @@ function ClientTable({ rows }) {
               <AnimatedRow key={x.id} index={i}>
                 <Td>
                   <b className="text-slate-800">{x.name}</b>
-                  <div className="mt-1 text-slate-400">{x.city}</div>
+                  <div className="mt-1 text-slate-500">{x.city}</div>
                 </Td>
                 <Td><Badge>{x.risk}</Badge></Td>
                 <Td className="font-bold text-slate-800">{money(x.wealth)}</Td>
@@ -292,7 +292,7 @@ export function Dashboard() {
                   <span className="mt-1 block text-sm font-bold text-slate-900">
                     <CountUp value={list.reduce((s, c) => s + c.wealth, 0) / 1e6} format={(n) => `R$ ${n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} mi`} duration={1 + i * 0.2} />
                   </span>
-                  <span className="text-[10px] text-slate-400">patrimônio somado</span>
+                  <span className="text-[11px] text-slate-500">patrimônio somado</span>
                 </motion.button>
               );
             })}
@@ -305,7 +305,7 @@ export function Dashboard() {
             action={<PillTabs layoutId="evo-range" value={range} onChange={setRange} tabs={[["6m", "6 meses"], ["12m", "12 meses"]]} className="rounded-lg bg-slate-100 p-1" />}
           />
           <ColumnChart key={range} data={series} valueLabel="Índice" />
-          <p className="mt-3 text-[11px] text-slate-400">Gráfico demonstrativo, sem representação de resultados reais.</p>
+          <p className="mt-3 text-[11px] text-slate-500">Gráfico demonstrativo, sem representação de resultados reais.</p>
         </Card>
       </div>
 
@@ -329,7 +329,7 @@ export function ClientsPage() {
       <PageTitle kicker="Base de clientes" title="Clientes" lead="Pesquise e acompanhe seus clientes em um único lugar." />
       <Card>
         <SectionHead
-          title={<>Lista de clientes <span className="text-sm font-normal text-slate-400">(<CountUp key={found.length} value={found.length} duration={0.4} />)</span></>}
+          title={<>Lista de clientes <span className="text-sm font-normal text-slate-500">(<CountUp key={found.length} value={found.length} duration={0.4} />)</span></>}
           action={
             <div className="flex w-full flex-wrap gap-2 sm:w-auto">
               <label className="relative min-w-0 flex-1 sm:flex-none">
@@ -553,7 +553,7 @@ export function Profile() {
                   {timeline.map((n, i) => (
                     <motion.li key={`${n.date}-${i}`} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }} className="relative py-3.5 pl-7">
                       <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1 + i * 0.08, type: "spring" }} className="absolute -left-[7px] top-5 h-3 w-3 rounded-full bg-gold ring-4 ring-surface" />
-                      <small className="text-slate-400">{n.date} • {n.type}</small>
+                      <small className="text-slate-500">{n.date} • {n.type}</small>
                       <h4 className="my-1.5 text-[13px] font-semibold text-slate-800">{n.text}</h4>
                       <p className="text-xs text-slate-500">Próximo passo: {n.next || "Não definido"}</p>
                     </motion.li>
@@ -770,7 +770,7 @@ export function Briefings() {
             {agenda.map((x, i) => (
               <AnimatedRow key={x.id} index={i}>
                 <Td><span className="inline-flex items-center gap-2"><ClientLink id={x.id} />{i === 0 && nextBadge}</span></Td>
-                <Td>{x.contact} <span className="text-slate-400">· em {daysUntil(x.contact)} dias</span></Td>
+                <Td>{x.contact} <span className="text-slate-500">· em {daysUntil(x.contact)} dias</span></Td>
                 <Td className="whitespace-normal">{x.objective}</Td>
                 <Td className="text-right"><Button onClick={() => go("briefing", x.id)}><FileText className="h-3.5 w-3.5" /> Ver briefing</Button></Td>
               </AnimatedRow>
@@ -984,7 +984,7 @@ export function Login({ onLogin }) {
       </div>
       <div className="grid flex-1 place-items-center p-6">
         <motion.form initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} onSubmit={(e) => { e.preventDefault(); onLogin(); }} className="w-full max-w-md">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Acesso à demonstração</p>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-500">Acesso à demonstração</p>
           <h2 className="mt-2 text-[28px] font-bold tracking-tight">Bem-vindo ao Advisor Copilot</h2>
           <p className="mt-1 text-sm text-slate-500">Entre para explorar os fluxos com informações fictícias.</p>
           <label className="mt-6 block text-xs font-bold">E-mail<input type="email" defaultValue="assessor@demo.com" required className={field} /></label>

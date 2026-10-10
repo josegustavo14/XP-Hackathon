@@ -129,7 +129,7 @@ function NewsCard({ item, relatedCount, contextLabel }) {
     >
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">{topic}</span>
-        <span className="inline-flex items-center gap-1 text-xs text-slate-400">
+        <span className="inline-flex items-center gap-1 text-xs text-slate-500">
           <Clock className="h-3 w-3" aria-hidden />
           <time dateTime={item.publishedAt}>{formatNewsDate(item.publishedAt)}</time>
         </span>
@@ -146,7 +146,7 @@ function NewsCard({ item, relatedCount, contextLabel }) {
       </div>
 
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
-        <span className="min-w-0 truncate text-xs text-slate-400" title={item.source}>
+        <span className="min-w-0 truncate text-xs text-slate-500" title={item.source}>
           {item.source}
         </span>
         {isSafeUrl(item.url) && (
@@ -273,13 +273,13 @@ export default function MarketIntelligence({ location = "dashboard", visibleClie
             ))}
           </AnimatePresence>
           {!list.length && (
-            <div className="col-span-full rounded-xl border border-dashed border-slate-200 py-12 text-center text-sm text-slate-400">
+            <div className="col-span-full rounded-xl border border-dashed border-slate-200 py-12 text-center text-sm text-slate-500">
               Não há notícias disponíveis para este período ou seleção.
             </div>
           )}
         </motion.div>
 
-        <p className="mt-4 text-[11px] leading-relaxed text-slate-400">
+        <p className="mt-4 text-[11px] leading-relaxed text-slate-500">
           Monitoramento informativo. Notícias não representam recomendação de investimento; o assessor deve verificar fonte, data, impacto e adequação ao cliente.
         </p>
       </section>

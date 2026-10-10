@@ -200,7 +200,7 @@ export default function App() {
                   <nav className="mt-11 grid gap-1">
                     {NAV.map(([id, Icon, label]) => (
                       <button key={id} onClick={() => go(id)} className={`relative flex items-center gap-3 rounded-lg px-3.5 py-3 text-left text-sm font-medium transition-colors ${active === id ? "text-white" : "text-white/55 hover:text-white"}`}>
-                        {active === id && <motion.span layoutId="nav-active" className="absolute inset-0 rounded-lg bg-[#303742]" transition={{ type: "spring", stiffness: 400, damping: 34 }} />}
+                        {active === id && <motion.span layoutId="nav-active" className="absolute inset-0 rounded-lg bg-white/10" transition={{ type: "spring", stiffness: 400, damping: 34 }} />}
                         <Icon className={`relative h-4 w-4 ${active === id ? "text-gold" : ""}`} />
                         <span className="relative flex-1">{label}</span>
                         {id === "alerts" && pending > 0 && (
@@ -209,7 +209,7 @@ export default function App() {
                       </button>
                     ))}
                   </nav>
-                  <div className="mt-auto border-t border-white/10 px-3 pt-4 text-[11px] leading-relaxed text-white/45">
+                  <div className="mt-auto border-t border-white/10 px-3 pt-4 text-[11px] leading-relaxed text-white/60">
                     AMBIENTE DEMONSTRATIVO<br />Dados fictícios • Sem integração real<br />Hackathon XP · 2026
                   </div>
                 </aside>
