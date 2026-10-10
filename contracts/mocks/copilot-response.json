@@ -1,0 +1,7 @@
+{
+  "answer": "Mariana Costa possui patrimônio de R$ 1.250.000,00. Há um alerta aberto de concentração em renda fixa que merece revisão com o cliente.",
+  "references": [
+    { "source": "client", "id": "11111111-1111-4111-8111-111111111111", "label": "Mariana Costa", "as_of": "2026-10-10T12:00:00Z" },
+    { "source": "alert", "id": "44444444-4444-4444-8444-444444444444", "label": "Concentração em renda fixa", "as_of": "2026-10-09T14:00:00Z" }
+  ]
+}
