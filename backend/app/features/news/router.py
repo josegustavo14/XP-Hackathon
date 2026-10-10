@@ -13,11 +13,7 @@ from app.shared.schemas import ERROR_RESPONSES
 router = APIRouter(responses=ERROR_RESPONSES)
 
 
-@router.post(
-    "/summaries/{period}",
-    response_model=NewsSummary,
-    summary="Gerar resumo diário ou semanal de notícias",
-)
+@router.post("/summaries/{period}", response_model=NewsSummary)
 async def summarize_news(
     period: NewsSummaryPeriod,
     payload: NewsSummaryRequest,
@@ -30,5 +26,6 @@ async def summarize_news(
     payload. A consulta dos artigos persistidos e o provedor LLM continuam em
     aberto até a definição de suas respectivas integrações.
     """
+    """Gera um resumo estritamente rastreável aos artigos enviados."""
     del user
     return await service.summarize(period=period, articles=payload.articles)
