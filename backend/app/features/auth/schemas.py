@@ -23,3 +23,21 @@ class AdvisorOut(ApiModel):
     name: str = Field(validation_alias="full_name")
     email: str
     office: str | None = None
+
+
+class LoginRequest(ApiModel):
+    email: str = Field(min_length=3, max_length=320)
+    password: str = Field(min_length=1, max_length=1024)
+
+
+class LoginAdvisorOut(ApiModel):
+    id: UUID
+    name: str
+    email: str
+
+
+class LoginResponse(ApiModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int = Field(gt=0)
+    advisor: LoginAdvisorOut
