@@ -20,6 +20,15 @@ const NAV = [
 ];
 
 const PAGES = { dashboard: Dashboard, clients: ClientsPage, profile: Profile, alerts: AlertsPage, alertDetail: AlertDetail, copilot: Copilot, briefings: Briefings, briefing: Briefing, finance: Finance, sources: Sources, settings: Settings };
+// Atalhos da barra inferior no celular; o copiloto fica no centro.
+const BOTTOM_NAV = [
+  ["dashboard", LayoutDashboard, "Início"],
+  ["clients", Users, "Clientes"],
+  ["copilot", Sparkles, "Copiloto"],
+  ["alerts", Bell, "Alertas"],
+  ["briefings", FileText, "Briefings"],
+];
+
 const PARENT = { profile: "clients", alertDetail: "alerts", briefing: "briefings", sources: "finance" };
 
 function initialTheme() {
@@ -46,6 +55,7 @@ export default function App() {
   const [chat, setChat] = useState([]);
   const [typing, setTyping] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [copilotOpen, setCopilotOpen] = useState(false);
   const [theme, setTheme] = useState(initialTheme);
 
   useEffect(() => {
@@ -76,6 +86,7 @@ export default function App() {
   const go = useCallback((page, params = null) => {
     setRoute({ page, params });
     setMenuOpen(false);
+    setCopilotOpen(false);
     window.scrollTo({ top: 0 });
   }, []);
 
@@ -96,6 +107,8 @@ export default function App() {
       setChat,
       ask,
       typing,
+      copilotOpen,
+      setCopilotOpen,
       toggleAlert: (id) => setAlerts((list) => list.map((a) => (a.id === id ? { ...a, status: a.status === "Pendente" ? "Analisado" : "Pendente" } : a))),
       addNote: (n) => setNotes((list) => [n, ...list]),
       resetDemo: () => {
@@ -108,7 +121,7 @@ export default function App() {
         setRoute({ page: "dashboard", params: null });
       },
     }),
-    [route, go, theme, toggleTheme, alerts, notes, chat, ask, typing]
+    [route, go, theme, toggleTheme, alerts, notes, chat, ask, typing, copilotOpen]
   );
 
   const Page = PAGES[route.page] || Dashboard;
@@ -182,6 +195,42 @@ export default function App() {
                 </div>
 
                 {route.page !== "copilot" && <CopilotWidget />}
+
+                <nav aria-label="Atalhos" className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+                  <div className="grid h-16 grid-cols-5">
+                    {BOTTOM_NAV.map(([id, Icon, label]) => {
+                      const on = id === "copilot" ? copilotOpen || route.page === "copilot" : active === id && !copilotOpen;
+                      if (id === "copilot") {
+                        return (
+                          <button
+                            key={id}
+                            onClick={() => (route.page === "copilot" ? null : setCopilotOpen((o) => !o))}
+                            aria-label={copilotOpen ? "Fechar copiloto" : "Perguntar ao Copiloto"}
+                            aria-expanded={copilotOpen}
+                            className="flex flex-col items-center justify-center gap-0.5"
+                          >
+                            <motion.span whileTap={{ scale: 0.9 }} className="-mt-6 grid h-13 w-13 place-items-center rounded-full bg-primary text-primary-accent shadow-lg shadow-black/20 ring-4 ring-slate-50">
+                              {copilotOpen ? <X className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
+                            </motion.span>
+                            <span className={`text-[11px] font-semibold ${on ? "text-slate-900" : "text-slate-500"}`}>{label}</span>
+                          </button>
+                        );
+                      }
+                      return (
+                        <button key={id} onClick={() => go(id)} aria-current={on ? "page" : undefined} className={`relative flex flex-col items-center justify-center gap-1 text-[11px] font-semibold ${on ? "text-slate-900" : "text-slate-500"}`}>
+                          {on && <motion.span layoutId="bottom-active" className="absolute top-0 h-0.5 w-8 rounded-full bg-gold" />}
+                          <span className="relative">
+                            <Icon className={`h-5 w-5 ${on ? "text-amber-600" : ""}`} />
+                            {id === "alerts" && pending > 0 && (
+                              <span className="absolute -right-2.5 -top-1.5 min-w-4 rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-4 text-white dark:text-slate-50">{pending}</span>
+                            )}
+                          </span>
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </nav>
               </motion.div>
             )}
           </AnimatePresence>

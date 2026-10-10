@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useStore } from "./store.js";
 import {
-  AnimatedRow, Badge, Button, Card, CountUp, Empty, Helper, LinkButton, Metric, PageTitle, SectionHead,
+  AnimatedRow, Badge, Button, Card, CountUp, Empty, Helper, LinkButton, Metric, MobileList, MobileRow, PageTitle, SectionHead,
   TableWrap, Td, Th, severityTone, useToast,
 } from "./ui.jsx";
 import { ColumnChart, DonutChart, HBarList } from "./charts.jsx";
@@ -44,8 +44,8 @@ function PillTabs({ tabs, value, onChange, layoutId, className = "" }) {
   );
 }
 
-const Select = ({ value, onChange, options }) => (
-  <select value={value} onChange={(e) => onChange(e.target.value)} className="h-10 min-w-40 rounded-lg border border-slate-200 bg-surface px-3 text-xs font-medium text-slate-700">
+const Select = ({ value, onChange, options, label }) => (
+  <select aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} className="h-10 min-w-0 flex-1 sm:min-w-40 sm:flex-none rounded-lg border border-slate-200 bg-surface px-3 text-xs font-medium text-slate-700">
     {options.map((o) => (
       <option key={o}>{o}</option>
     ))}
@@ -60,7 +60,21 @@ function ClientLink({ id }) {
 function AlertTable({ rows, compact = false }) {
   const { go } = useStore();
   return (
-    <TableWrap minWidth={compact ? "min-w-[520px]" : undefined}>
+    <>
+    <MobileList show={rows.length > 0} empty="Nenhum alerta encontrado.">
+      {rows.map((x, i) => (
+        <MobileRow key={x.id} index={i} onClick={() => go("alertDetail", x.id)}>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge tone={severityTone(x.severity)}>{x.severity}</Badge>
+            {!compact && <Badge>{x.type}</Badge>}
+            {x.status === "Analisado" && <Badge tone="green">Analisado</Badge>}
+          </div>
+          <p className="mt-2 text-sm font-semibold leading-snug text-slate-900">{x.title}</p>
+          <p className="mt-0.5 text-xs text-slate-500">{clientById(x.cid).name} · {x.date}</p>
+        </MobileRow>
+      ))}
+    </MobileList>
+    <TableWrap desktopOnly minWidth={compact ? "min-w-[520px]" : undefined}>
       <thead>
         <tr>
           <Th>Cliente</Th><Th>Ocorrência</Th>{!compact && <Th>Tipo</Th>}<Th>Prioridade</Th><Th>Status</Th><Th />
@@ -85,13 +99,34 @@ function AlertTable({ rows, compact = false }) {
         {!rows.length && <Empty colSpan={compact ? 5 : 6}>Nenhum alerta encontrado.</Empty>}
       </tbody>
     </TableWrap>
+    </>
   );
 }
 
 function ClientTable({ rows }) {
   const { go, alerts } = useStore();
+  const openCount = (id) => alerts.filter((a) => a.cid === id && a.status === "Pendente").length;
   return (
-    <TableWrap>
+    <>
+    <MobileList show={rows.length > 0} empty="Nenhum cliente encontrado.">
+      {rows.map((x, i) => {
+        const open = openCount(x.id);
+        return (
+          <MobileRow key={x.id} index={i} onClick={() => go("profile", x.id)}>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="truncate text-sm font-semibold text-slate-900">{x.name}</span>
+              <span className="shrink-0 text-sm font-bold text-slate-900">{money(x.wealth)}</span>
+            </div>
+            <p className="mt-0.5 text-xs text-slate-500">{x.city} · contato {x.contact.slice(0, 5)}</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <Badge>{x.risk}</Badge>
+              {open > 0 && <Badge tone="gold">{open} alerta(s)</Badge>}
+            </div>
+          </MobileRow>
+        );
+      })}
+    </MobileList>
+    <TableWrap desktopOnly>
       <thead>
         <tr>
           <Th>Cliente</Th><Th>Perfil</Th><Th>Patrimônio</Th><Th>Instituições</Th><Th>Alertas</Th><Th>Próximo contato</Th><Th />
@@ -100,7 +135,7 @@ function ClientTable({ rows }) {
       <tbody>
         <AnimatePresence initial={false}>
           {rows.map((x, i) => {
-            const open = alerts.filter((a) => a.cid === x.id && a.status === "Pendente").length;
+            const open = openCount(x.id);
             return (
               <AnimatedRow key={x.id} index={i}>
                 <Td>
@@ -120,6 +155,7 @@ function ClientTable({ rows }) {
         {!rows.length && <Empty colSpan={7}>Nenhum cliente encontrado.</Empty>}
       </tbody>
     </TableWrap>
+    </>
   );
 }
 
@@ -141,7 +177,7 @@ export function Dashboard() {
         lead="Acompanhe sua base e comece pelas situações mais relevantes."
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <Metric label="Clientes sob gestão" value={128} foot="6 perfis disponíveis na demonstração" icon={Users} />
         <Metric label="Precisam de atenção" value={new Set(open.map((x) => x.cid)).size} foot="Com alertas em aberto" icon={AlertTriangle} accent="text-amber-600" />
         <Metric label="Alertas em aberto" value={open.length} foot="Priorizados por gravidade" icon={Bell} accent="text-red-500" />
@@ -253,18 +289,17 @@ export function ClientsPage() {
         <SectionHead
           title={<>Lista de clientes <span className="text-sm font-normal text-slate-400">(<CountUp key={found.length} value={found.length} duration={0.4} />)</span></>}
           action={
-            <div className="flex flex-wrap gap-2">
-              <label className="relative">
+            <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+              <label className="relative min-w-0 flex-1 sm:flex-none">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                 <input
-                  autoFocus
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Buscar cliente..."
-                  className="h-10 w-56 rounded-lg border border-slate-200 bg-surface pl-9 pr-3 text-xs outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  className="h-10 w-full sm:w-56 rounded-lg border border-slate-200 bg-surface pl-9 pr-3 text-xs outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                 />
               </label>
-              <Select value={risk} onChange={setRisk} options={["Todos", ...riskProfiles]} />
+              <Select label="Perfil de risco" value={risk} onChange={setRisk} options={["Todos", ...riskProfiles]} />
             </div>
           }
         />
@@ -442,7 +477,7 @@ export function AlertsPage() {
   return (
     <>
       <PageTitle kicker="Monitoramento inteligente" title="Riscos e oportunidades" lead="Alertas calculados com regras demonstrativas e revisados pelo assessor." />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <Metric label="Em aberto" value={pending.length} foot="Pendentes de avaliação" icon={Bell} />
         <Metric label="Alta prioridade" value={pending.filter((x) => x.severity === "Alta").length} foot="Requerem acompanhamento" icon={AlertTriangle} accent="text-red-500" />
         <Metric label="Vencimentos" value={alerts.filter((x) => x.type === "Vencimento").length} foot="Monitorados pela plataforma" icon={CalendarClock} />
@@ -453,9 +488,9 @@ export function AlertsPage() {
           title="Fila de alertas"
           subtitle={`${rows.length} de ${alerts.length} alertas`}
           action={
-            <div className="flex flex-wrap gap-2">
-              <Select value={type} onChange={setType} options={["Todos", "Concentração", "Vencimento", "Oportunidade", "Relacionamento"]} />
-              <Select value={severity} onChange={setSeverity} options={["Todas", "Alta", "Média", "Baixa"]} />
+            <div className="flex w-full gap-2 sm:w-auto">
+              <Select label="Tipo de alerta" value={type} onChange={setType} options={["Todos", "Concentração", "Vencimento", "Oportunidade", "Relacionamento"]} />
+              <Select label="Prioridade" value={severity} onChange={setSeverity} options={["Todas", "Alta", "Média", "Baixa"]} />
             </div>
           }
         />
@@ -568,7 +603,19 @@ export function Briefings() {
       <PageTitle kicker="Preparação de reuniões" title="Briefings inteligentes" lead="Resumos de clientes e pautas de atendimento para revisão humana." />
       <Card>
         <SectionHead title="Próximos atendimentos" />
-        <TableWrap>
+        <MobileList>
+          {clients.map((x, i) => (
+            <MobileRow key={x.id} index={i} onClick={() => go("briefing", x.id)}>
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="truncate text-sm font-semibold text-slate-900">{x.name}</span>
+                <span className="shrink-0 text-xs text-slate-500">{x.contact.slice(0, 5)} · em {daysUntil(x.contact)} dias</span>
+              </div>
+              <p className="mt-0.5 text-xs text-slate-500">{x.objective}</p>
+              <span className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-blue-800"><FileText className="h-3.5 w-3.5" /> Gerar briefing</span>
+            </MobileRow>
+          ))}
+        </MobileList>
+        <TableWrap desktopOnly>
           <thead><tr><Th>Cliente</Th><Th>Data prevista</Th><Th>Objetivo</Th><Th /></tr></thead>
           <tbody>
             {clients.map((x, i) => (

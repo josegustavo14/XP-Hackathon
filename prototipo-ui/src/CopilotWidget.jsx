@@ -8,8 +8,7 @@ import { ChatThread, CopilotMark, SUGGESTIONS } from "./chat.jsx";
 // Botão flutuante no canto inferior direito que abre um chat rápido com o copiloto
 // sem sair da tela atual. A conversa é a mesma da página "Copiloto IA".
 export default function CopilotWidget() {
-  const { chat, ask, typing, go } = useStore();
-  const [open, setOpen] = useState(false);
+  const { chat, ask, typing, go, copilotOpen: open, setCopilotOpen: setOpen } = useStore();
   const [hover, setHover] = useState(false);
   const [input, setInput] = useState("");
   const inputRef = useRef(null);
@@ -41,7 +40,7 @@ export default function CopilotWidget() {
             exit={{ opacity: 0, y: 16, scale: 0.96, transition: { duration: 0.15 } }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
             style={{ transformOrigin: "bottom right" }}
-            className="fixed inset-x-3 bottom-24 z-40 flex h-[min(560px,calc(100dvh-8rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-surface shadow-2xl shadow-black/20 sm:inset-x-auto sm:right-6 sm:w-[380px]"
+            className="fixed inset-x-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 flex h-[min(560px,calc(100dvh-10rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-surface shadow-2xl shadow-black/20 sm:inset-x-auto sm:right-6 sm:w-[380px] md:bottom-24"
           >
             <header className="flex items-center gap-3 border-b border-slate-200 px-4 py-3">
               <CopilotMark size="h-9 w-9" icon="h-4 w-4" animated={false} />
@@ -107,7 +106,7 @@ export default function CopilotWidget() {
         )}
       </AnimatePresence>
 
-      <div className="fixed bottom-6 right-4 z-40 flex items-center gap-3 sm:right-6">
+      <div className="fixed bottom-6 right-6 z-40 hidden items-center gap-3 md:flex">
         <AnimatePresence>
           {hover && !open && (
             <motion.span
@@ -133,7 +132,7 @@ export default function CopilotWidget() {
           whileHover={{ scale: 1.06 }}
           whileTap={{ scale: 0.94 }}
           transition={{ type: "spring", stiffness: 400, damping: 22 }}
-          className="relative grid h-14 w-14 place-items-center rounded-full bg-navy text-gold shadow-xl shadow-black/25 ring-1 ring-white/10 dark:bg-white dark:text-[#b8860b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+          className="relative grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-accent shadow-xl shadow-black/25 ring-1 ring-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
         >
           {!open && (
             <motion.span

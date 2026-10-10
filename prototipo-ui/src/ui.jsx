@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AnimatePresence, animate, motion, useInView, useReducedMotion } from "framer-motion";
-import { CheckCircle2, Moon, Sun } from "lucide-react";
+import { CheckCircle2, ChevronRight, Moon, Sun } from "lucide-react";
 
 const BADGE = {
   neutral: "bg-slate-100 text-slate-600",
@@ -114,18 +114,44 @@ export function Metric({ label, value, format, foot, icon: Icon, accent = "text-
         <span className="text-xs text-slate-500">{label}</span>
         {Icon && <Icon className={`h-4 w-4 ${accent}`} aria-hidden />}
       </div>
-      <div className="mt-3 text-[28px] font-bold tracking-tight text-slate-900">
+      <div className="mt-2 text-xl font-bold tracking-tight text-slate-900 sm:mt-3 sm:text-[28px]">
         {typeof value === "number" ? <CountUp value={value} format={format} /> : value}
       </div>
-      <div className="mt-1 text-[11px] text-slate-400">{foot}</div>
+      <div className="mt-1 text-[11px] leading-snug text-slate-500">{foot}</div>
       <span className="absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-gold transition-transform duration-300 group-hover:scale-x-100" />
     </Card>
   );
 }
 
-export function TableWrap({ children, minWidth = "min-w-[640px]" }) {
+// No celular, tabelas viram uma lista de linhas tocáveis (a linha inteira é o link).
+export function MobileList({ children, empty, show = true }) {
   return (
-    <div className="overflow-x-auto">
+    <ul className="-mx-1 divide-y divide-slate-100 md:hidden">
+      <AnimatePresence initial={false}>{children}</AnimatePresence>
+      {!show && <li className="py-10 text-center text-sm text-slate-400">{empty}</li>}
+    </ul>
+  );
+}
+
+export function MobileRow({ onClick, children, index = 0 }) {
+  return (
+    <motion.li
+      layout
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0, transition: { delay: Math.min(index * 0.04, 0.3) } }}
+      exit={{ opacity: 0, transition: { duration: 0.15 } }}
+    >
+      <button onClick={onClick} className="flex w-full items-center gap-3 rounded-lg px-1 py-3.5 text-left transition-colors active:bg-slate-100">
+        <div className="min-w-0 flex-1">{children}</div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+      </button>
+    </motion.li>
+  );
+}
+
+export function TableWrap({ children, minWidth = "min-w-[640px]", desktopOnly = false }) {
+  return (
+    <div className={`overflow-x-auto ${desktopOnly ? "hidden md:block" : ""}`}>
       <table className={`w-full ${minWidth} border-collapse text-left text-xs`}>{children}</table>
     </div>
   );

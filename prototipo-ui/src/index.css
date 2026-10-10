@@ -13,6 +13,8 @@
   --color-surface: #ffffff;
   --color-primary: #151a22;
   --color-on-primary: #ffffff;
+  /* Destaque (ícone dourado) sobre bg-primary. */
+  --color-primary-accent: #e8b44b;
 
   /* Paleta categórica dos gráficos — validada para daltonismo no fundo claro. */
   --color-chart-1: #376ac6;
@@ -28,6 +30,7 @@
   --color-surface: #161b24;
   --color-primary: #e8ecf2;
   --color-on-primary: #151a22;
+  --color-primary-accent: #9a6b0c;
 
   /* Validada no fundo #161b24. */
   --color-chart-1: #5b8def;
