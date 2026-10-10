@@ -1,6 +1,24 @@
 import { env } from '../config/env';
 import type { ApiErrorPayload } from './generated';
 
+let demoAccessToken: string | undefined;
+
+async function getAccessToken(): Promise<string | undefined> {
+  if (env.accessToken) return env.accessToken;
+  if (env.mode !== 'local') return undefined;
+  if (demoAccessToken) return demoAccessToken;
+
+  const response = await fetch(`${env.apiBaseUrl}/auth/login`, {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'assessor@demo.com', password: 'string' }),
+  });
+  if (!response.ok) throw new ApiConfigurationError('Não foi possível iniciar a sessão demonstrativa da API local.');
+  const payload = await response.json() as { access_token: string };
+  demoAccessToken = payload.access_token;
+  return demoAccessToken;
+}
+
 export class ApiConfigurationError extends Error {
   constructor(message: string) {
     super(message);
@@ -31,12 +49,13 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
     );
   }
 
+  const accessToken = await getAccessToken();
   const response = await fetch(`${env.apiBaseUrl}${path}`, {
     ...init,
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
-      ...(env.accessToken ? { Authorization: `Bearer ${env.accessToken}` } : {}),
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...init?.headers,
     },
   });

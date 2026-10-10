@@ -51,6 +51,39 @@ export const normalizeRiskProfileToContract = (profile: string): string => {
   return profile;
 };
 
+function listMockClients(params: ClientFilterParams = {}): ClientsListResponse {
+  const page = params.page ?? 1;
+  const pageSize = params.page_size ?? 10;
+  const query = (params.query ?? '').trim().toLowerCase();
+  const risk = params.risk_profile ?? 'Todos';
+  let filtered = [...MOCK_CLIENTS];
+
+  if (query) {
+    filtered = filtered.filter(
+      (client) =>
+        client.name.toLowerCase().includes(query)
+        || client.city.toLowerCase().includes(query)
+        || (client.email && client.email.toLowerCase().includes(query))
+        || (client.primary_objective && client.primary_objective.toLowerCase().includes(query)),
+    );
+  }
+  if (risk && risk !== 'Todos') {
+    const targetRisk = normalizeRiskProfile(risk);
+    filtered = filtered.filter((client) => normalizeRiskProfile(client.risk_profile) === targetRisk);
+  }
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const startIndex = (page - 1) * pageSize;
+  return {
+    items: filtered.slice(startIndex, startIndex + pageSize),
+    page,
+    page_size: pageSize,
+    total,
+    total_pages: totalPages,
+  };
+}
+
 export const clientsApi = {
   list: async (params: ClientFilterParams = {}): Promise<ClientsListResponse> => {
     const useMocks = env.mode === 'mock';
@@ -59,37 +92,7 @@ export const clientsApi = {
     const query = (params.query ?? '').trim().toLowerCase();
     const risk = params.risk_profile ?? 'Todos';
 
-    if (useMocks) {
-      let filtered = [...MOCK_CLIENTS];
-
-      if (query) {
-        filtered = filtered.filter(
-          (c) =>
-            c.name.toLowerCase().includes(query) ||
-            c.city.toLowerCase().includes(query) ||
-            (c.email && c.email.toLowerCase().includes(query)) ||
-            (c.primary_objective && c.primary_objective.toLowerCase().includes(query)),
-        );
-      }
-
-      if (risk && risk !== 'Todos') {
-        const targetRisk = normalizeRiskProfile(risk);
-        filtered = filtered.filter((c) => normalizeRiskProfile(c.risk_profile) === targetRisk);
-      }
-
-      const total = filtered.length;
-      const totalPages = Math.max(1, Math.ceil(total / pageSize));
-      const startIndex = (page - 1) * pageSize;
-      const paginatedItems = filtered.slice(startIndex, startIndex + pageSize);
-
-      return {
-        items: paginatedItems,
-        page,
-        page_size: pageSize,
-        total,
-        total_pages: totalPages,
-      };
-    }
+    if (useMocks) return listMockClients(params);
 
     try {
       const searchParams = new URLSearchParams();
@@ -102,6 +105,7 @@ export const clientsApi = {
 
       const data = await request<Record<string, unknown>>(`/clients?${searchParams.toString()}`);
       const rawItems = (data.items as Array<Record<string, unknown>>) || [];
+      const meta = (data.meta as Record<string, unknown> | undefined) ?? data;
       return {
         items: rawItems.map((item) => ({
           id: String(item.id ?? ''),
@@ -109,20 +113,20 @@ export const clientsApi = {
           risk_profile: String(item.risk_profile ?? 'moderate'),
           net_worth: (item.net_worth as number | string) ?? '0.00',
           institutions_count: Number(item.institutions_count ?? 1),
-          active_alerts_count: Number(item.active_alerts_count ?? 0),
+          active_alerts_count: Number(item.active_alerts_count ?? item.open_alerts ?? 0),
           city: String(item.city ?? 'Brasil'),
           primary_objective: item.primary_objective ? String(item.primary_objective) : undefined,
           next_contact_date: item.next_contact_date ? String(item.next_contact_date) : undefined,
           email: item.email ? String(item.email) : undefined,
         })),
-        page: Number(data.page ?? page),
-        page_size: Number(data.page_size ?? pageSize),
-        total: Number(data.total ?? 0),
-        total_pages: Number(data.total_pages ?? 1),
+        page: Number(meta.page ?? page),
+        page_size: Number(meta.page_size ?? pageSize),
+        total: Number(meta.total ?? 0),
+        total_pages: Number(meta.total_pages ?? 1),
       };
     } catch (err) {
       console.warn('Fallback para mock de clientes após erro na API:', err);
-      return clientsApi.list({ ...params, page, page_size: pageSize });
+      return listMockClients({ ...params, page, page_size: pageSize });
     }
   },
 

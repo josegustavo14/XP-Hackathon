@@ -15,6 +15,7 @@ from app.features.auth import router as auth
 from app.features.briefings import router as briefings
 from app.features.clients import router as clients
 from app.features.copilot import router as copilot
+from app.features.demo import router as demo
 from app.features.health import router as health
 from app.features.interactions import router as interactions
 from app.features.news import router as news
@@ -50,6 +51,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
         expose_headers=[TRACE_ID_HEADER],
+        allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     )
 
     # 3. Handler global de exceções padronizado no envelope de erro
@@ -60,6 +62,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(health.router, prefix=API_V1_PREFIX)
 
     # 5. Registro modular das features sob /api/v1
+    # O modo mock é somente local: mantém o frontend demonstrável sem banco
+    # ou serviços externos e não é montado em ambientes integrados.
+    if settings.auth_mode == "mock":
+        app.include_router(demo.router, prefix=API_V1_PREFIX)
     app.include_router(auth.router, prefix=f"{API_V1_PREFIX}/auth", tags=["auth"])
     app.include_router(clients.router, prefix=f"{API_V1_PREFIX}/clients", tags=["clients"])
     app.include_router(

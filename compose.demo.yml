@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment: { POSTGRES_DB: xp_advisor_demo, POSTGRES_USER: xp_demo, POSTGRES_PASSWORD: xp_demo_local }
+    ports: ["54322:5432"]
+    volumes: ["xp_advisor_demo_data:/var/lib/postgresql/data", "./database/demo_seed.sql:/docker-entrypoint-initdb.d/01-demo-seed.sql:ro"]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U xp_demo -d xp_advisor_demo"], interval: 3s, timeout: 3s, retries: 20 }
+  backend:
+    build: { context: ., dockerfile: backend/Dockerfile.demo }
+    environment:
+      AUTH_MODE: mock
+      DATABASE_URL: postgresql+asyncpg://xp_demo:xp_demo_local@db:5432/xp_advisor_demo
+      MOCK_AUTH_EMAIL: assessor@demo.com
+      MOCK_AUTH_PASSWORD: string
+      LOCAL_JWT_SECRET: local-demo-secret-with-at-least-32-characters
+    ports: ["8000:8000"]
+    depends_on: { db: { condition: service_healthy } }
+volumes: { xp_advisor_demo_data: {} }
