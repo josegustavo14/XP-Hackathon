@@ -1,0 +1,11 @@
+{
+  "id": "11111111-1111-4111-8111-111111111111",
+  "name": "Mariana Costa",
+  "email": "mariana.costa@example.test",
+  "phone": "+55 11 90000-0001",
+  "risk_profile": "moderado",
+  "objectives": [
+    { "id": "33333333-3333-4333-8333-333333333333", "name": "Aposentadoria", "target_value": "3000000.00", "target_date": "2045-12-31" }
+  ],
+  "created_at": "2026-01-15T10:00:00Z"
+}
