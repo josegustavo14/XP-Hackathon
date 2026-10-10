@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  AlertTriangle, ArrowLeft, ArrowRight, Bell, Building2, CalendarClock, CheckCircle2, Copy, Database, FileText, Landmark,
+  AlertTriangle, ArrowRight, Bell, Building2, CalendarClock, CheckCircle2, Copy, Database, FileText, Landmark, MessageSquarePlus, X,
   RotateCcw, Search, Send, ShieldCheck, Sparkles, Trash2, TrendingUp, Users, Wallet,
 } from "lucide-react";
 import { useStore } from "./store.js";
@@ -356,42 +356,135 @@ export function ClientsPage() {
 
 /* --------------------------------- Perfil -------------------------------- */
 
-export function Profile() {
-  const { params, go, alerts, notes, addNote } = useStore();
+const BACK_LABEL = {
+  dashboard: "Voltar ao início", clients: "Voltar aos clientes", profile: "Voltar ao cliente", alerts: "Voltar à fila de alertas",
+  alertDetail: "Voltar ao alerta", copilot: "Voltar ao copiloto", briefings: "Voltar aos briefings", briefing: "Voltar ao briefing",
+  finance: "Voltar aos dados integrados", sources: "Voltar às fontes", settings: "Voltar às configurações",
+};
+
+// "Voltar" que leva à tela de origem (ex.: do alerta para o cliente e de volta ao alerta).
+function useBackLink() {
+  const { back, prev } = useStore();
+  return { label: BACK_LABEL[prev.page] || "Voltar", onClick: back };
+}
+
+// Registro de interação: painel lateral no desktop, folha inferior no celular.
+function NoteSheet({ client, open, onClose, onSaved }) {
+  const { addNote } = useStore();
   const toast = useToast();
-  const x = clientById(params);
-  const [tab, setTab] = useState("overview");
-  const clientAlerts = alerts.filter((a) => a.cid === x.id);
-  const timeline = notes.filter((n) => n.cid === x.id);
+  const first = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => first.current?.focus(), 200);
+    const onKey = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open, onClose]);
 
   function save(e) {
     e.preventDefault();
     const f = new FormData(e.target);
-    addNote({ cid: x.id, type: f.get("type"), date: String(f.get("date")).split("-").reverse().join("/"), text: f.get("text"), next: f.get("next") });
-    setTab("memory");
-    toast("Interação registrada com sucesso");
+    addNote({ cid: client.id, type: f.get("type"), date: String(f.get("date")).split("-").reverse().join("/"), text: f.get("text"), next: f.get("next") });
+    toast("Interação registrada no histórico");
+    onClose();
+    onSaved?.();
   }
 
-  const input = "h-11 w-full rounded-lg border border-slate-200 bg-surface px-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100";
+  const input = "h-11 w-full rounded-lg border border-slate-200 bg-surface px-3 text-sm text-slate-900 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100";
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-stretch md:justify-end">
+          <motion.div className="absolute inset-0 bg-black/40" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} aria-hidden />
+          <motion.section
+            role="dialog"
+            aria-label={`Registrar interação com ${client.name}`}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", stiffness: 380, damping: 38 }}
+            className="relative flex max-h-[92dvh] w-full flex-col rounded-t-2xl bg-surface shadow-2xl md:max-h-none md:w-[440px] md:rounded-none md:border-l md:border-slate-200"
+          >
+            <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-slate-200 md:hidden" aria-hidden />
+            <header className="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">Registrar interação</h2>
+                <p className="mt-0.5 text-xs text-slate-500">{client.name} · fica salvo no histórico do cliente</p>
+              </div>
+              <button onClick={onClose} aria-label="Fechar" className="grid h-8 w-8 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900">
+                <X className="h-4 w-4" />
+              </button>
+            </header>
+            <form onSubmit={save} className="flex min-h-0 flex-1 flex-col">
+              <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="text-xs font-semibold text-slate-600">
+                    Tipo
+                    <select ref={first} name="type" className={`${input} mt-1.5`}>
+                      {["Reunião", "Ligação", "Contato digital", "Observação"].map((o) => <option key={o}>{o}</option>)}
+                    </select>
+                  </label>
+                  <label className="text-xs font-semibold text-slate-600">
+                    Data
+                    <input name="date" type="date" defaultValue="2026-10-10" required className={`${input} mt-1.5`} />
+                  </label>
+                </div>
+                <label className="block text-xs font-semibold text-slate-600">
+                  Resumo do atendimento
+                  <textarea name="text" required placeholder="O que foi discutido?" className={`${input} mt-1.5 h-auto min-h-28 py-3`} />
+                </label>
+                <label className="block text-xs font-semibold text-slate-600">
+                  Próximos passos
+                  <textarea name="next" placeholder="O que deve ser acompanhado?" className={`${input} mt-1.5 h-auto min-h-24 py-3`} />
+                </label>
+                <Helper>Registre somente informações pertinentes ao atendimento e autorizadas pelo cliente.</Helper>
+              </div>
+              <footer className="flex gap-3 border-t border-slate-200 px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+                <Button type="button" onClick={onClose} className="flex-1 md:flex-none">Cancelar</Button>
+                <Button variant="primary" type="submit" className="flex-1">Salvar registro</Button>
+              </footer>
+            </form>
+          </motion.section>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+export function Profile() {
+  const { params, go, alerts, notes } = useStore();
+  const x = clientById(params);
+  const [tab, setTab] = useState("overview");
+  const [noteOpen, setNoteOpen] = useState(false);
+  const clientAlerts = alerts.filter((a) => a.cid === x.id);
+  const timeline = notes.filter((n) => n.cid === x.id);
+  const backLink = useBackLink();
 
   return (
     <>
       <PageTitle
+        back={backLink}
         kicker="Relacionamento / Cliente"
         title={x.name}
         lead={`${x.city} • Perfil ${x.risk} • ${x.inst} instituições`}
-        action={<Button onClick={() => go("clients")}><ArrowLeft className="h-3.5 w-3.5" /> Voltar aos clientes</Button>}
+        action={<Button variant="primary" onClick={() => setNoteOpen(true)} className="w-full sm:w-auto"><MessageSquarePlus className="h-3.5 w-3.5" /> Registrar interação</Button>}
       />
+      <NoteSheet client={x} open={noteOpen} onClose={() => setNoteOpen(false)} onSaved={() => setTab("memory")} />
       <div className="mb-5 border-b border-slate-200 pb-3">
-        <PillTabs layoutId="profile-tab" value={tab} onChange={setTab} tabs={[["overview", "Visão geral"], ["portfolio", "Carteira"], ["memory", "Histórico"], ["note", "Registrar interação"]]} />
+        <PillTabs layoutId="profile-tab" value={tab} onChange={setTab} tabs={[["overview", "Visão geral"], ["portfolio", "Carteira"], ["memory", `Histórico (${timeline.length})`]]} />
       </div>
 
       <AnimatePresence mode="wait">
         <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }}>
           {tab === "overview" && (
             <>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <Metric label="Patrimônio consolidado" value={x.wealth} format={(n) => money(Math.round(n))} foot={`${x.inst} instituições simuladas`} icon={Wallet} accent="text-emerald-600" />
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
+                <Metric className="col-span-2 md:col-span-1" label="Patrimônio consolidado" value={x.wealth} format={(n) => money(Math.round(n))} foot={`${x.inst} instituições simuladas`} icon={Wallet} accent="text-emerald-600" />
                 <Metric label="Perfil de risco" value={x.risk} foot="Suitability demonstrativa" icon={ShieldCheck} />
                 <Metric label="Alertas ativos" value={clientAlerts.filter((a) => a.status === "Pendente").length} foot="Acompanhamento pendente" icon={Bell} accent="text-red-500" />
               </div>
@@ -410,7 +503,10 @@ export function Profile() {
                 <Card>
                   <SectionHead title="Próximo passo" />
                   <p className="mb-4 text-sm text-slate-500">Revise os alertas e o histórico antes de entrar em contato.</p>
-                  <Button variant="primary" onClick={() => go("briefing", x.id)}><Sparkles className="h-3.5 w-3.5" /> Gerar briefing</Button>
+                  <div className="flex flex-wrap gap-3">
+                    <Button onClick={() => go("briefing", x.id)}><Sparkles className="h-3.5 w-3.5" /> Gerar briefing</Button>
+                    <Button variant="ghost" onClick={() => setTab("memory")}>Ver histórico</Button>
+                  </div>
                 </Card>
               </div>
               <Card className="mt-5">
@@ -452,7 +548,7 @@ export function Profile() {
           {tab === "memory" && (
             <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(290px,.8fr)]">
               <Card>
-                <SectionHead title="Linha do tempo" action={<Button variant="primary" onClick={() => setTab("note")}>Novo registro</Button>} />
+                <SectionHead title="Linha do tempo" action={<Button onClick={() => setNoteOpen(true)}><MessageSquarePlus className="h-3.5 w-3.5" /> Novo registro</Button>} />
                 <ol className="relative ml-1.5 border-l-2 border-slate-100">
                   {timeline.map((n, i) => (
                     <motion.li key={`${n.date}-${i}`} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }} className="relative py-3.5 pl-7">
@@ -473,34 +569,6 @@ export function Profile() {
             </div>
           )}
 
-          {tab === "note" && (
-            <Card className="max-w-3xl">
-              <SectionHead title="Registrar atendimento" subtitle="Este registro ficará disponível na linha do tempo deste cliente." />
-              <form onSubmit={save} className="space-y-5">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <label className="text-xs font-semibold text-slate-600">
-                    Tipo de interação
-                    <select name="type" className={`${input} mt-1.5`}>
-                      {["Reunião", "Ligação", "Contato digital", "Observação"].map((o) => <option key={o}>{o}</option>)}
-                    </select>
-                  </label>
-                  <label className="text-xs font-semibold text-slate-600">
-                    Data
-                    <input name="date" type="date" defaultValue="2026-10-10" required className={`${input} mt-1.5`} />
-                  </label>
-                </div>
-                <label className="block text-xs font-semibold text-slate-600">
-                  Resumo do atendimento
-                  <textarea name="text" required placeholder="O que foi discutido?" className={`${input} mt-1.5 h-auto min-h-28 py-3`} />
-                </label>
-                <label className="block text-xs font-semibold text-slate-600">
-                  Próximos passos
-                  <textarea name="next" placeholder="O que deve ser acompanhado?" className={`${input} mt-1.5 h-auto min-h-28 py-3`} />
-                </label>
-                <Button variant="primary" type="submit">Salvar registro</Button>
-              </form>
-            </Card>
-          )}
         </motion.div>
       </AnimatePresence>
     </>
@@ -546,6 +614,7 @@ export function AlertsPage() {
 
 export function AlertDetail() {
   const { params, alerts, go, toggleAlert, askCopilot } = useStore();
+  const backLink = useBackLink();
   const toast = useToast();
   const x = alerts.find((a) => a.id === +params) || alerts[0];
   const cl = clientById(x.cid);
@@ -560,7 +629,7 @@ export function AlertDetail() {
 
   return (
     <>
-      <PageTitle kicker="Monitoramento / Detalhe do alerta" title={x.title} lead={`${cl.name} · ${x.type} · identificado em ${x.date}`} action={<Button onClick={() => go("alerts")}><ArrowLeft className="h-3.5 w-3.5" /> Voltar à fila</Button>} />
+      <PageTitle kicker="Monitoramento / Detalhe do alerta" title={x.title} lead={`${cl.name} · ${x.type} · identificado em ${x.date}`} back={backLink} />
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(290px,.8fr)]">
         <Card>
           <div className="flex flex-wrap gap-2">
@@ -715,6 +784,8 @@ export function Briefings() {
 
 export function Briefing() {
   const { params, alerts, notes, go } = useStore();
+  const backLink = useBackLink();
+  const [noteOpen, setNoteOpen] = useState(false);
   const toast = useToast();
   const x = clientById(params);
   const [phase, setPhase] = useState("loading");
@@ -743,7 +814,7 @@ export function Briefing() {
 
   return (
     <>
-      <PageTitle kicker="Inteligência / Briefing" title={`Briefing — ${x.name}`} lead="Resumo contextualizado para apoiar o próximo atendimento." action={<Button onClick={() => go("briefings")}><ArrowLeft className="h-3.5 w-3.5" /> Todos os briefings</Button>} />
+      <PageTitle kicker="Inteligência / Briefing" title={`Briefing — ${x.name}`} lead="Resumo contextualizado para apoiar o próximo atendimento." back={backLink} />
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(290px,.8fr)]">
         <Card>
           <SectionHead title="Preparação da reunião" action={<Badge tone="blue">Revisão obrigatória</Badge>} />
@@ -767,8 +838,10 @@ export function Briefing() {
               </div>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Button variant="primary" onClick={copy}><Copy className="h-3.5 w-3.5" /> Copiar briefing</Button>
-                <Button onClick={() => setRun((n) => n + 1)}><RotateCcw className="h-3.5 w-3.5" /> Regenerar</Button>
+                <Button onClick={() => setNoteOpen(true)}><MessageSquarePlus className="h-3.5 w-3.5" /> Registrar após a reunião</Button>
+                <Button variant="ghost" onClick={() => setRun((n) => n + 1)}><RotateCcw className="h-3.5 w-3.5" /> Regenerar</Button>
               </div>
+              <NoteSheet client={x} open={noteOpen} onClose={() => setNoteOpen(false)} />
             </>
           )}
         </Card>
@@ -822,10 +895,10 @@ export function Finance() {
 }
 
 export function Sources() {
-  const { go } = useStore();
+  const backLink = useBackLink();
   return (
     <>
-      <PageTitle kicker="Governança / Integrações" title="Fontes e qualidade dos dados" lead="Identificação das origens e do status de cada integração." action={<Button onClick={() => go("finance")}><ArrowLeft className="h-3.5 w-3.5" /> Dados integrados</Button>} />
+      <PageTitle kicker="Governança / Integrações" title="Fontes e qualidade dos dados" lead="Identificação das origens e do status de cada integração." back={backLink} />
       <Card>
         <TableWrap>
           <thead><tr><Th>Fonte</Th><Th>Tipo</Th><Th>Atualização</Th><Th>Status</Th></tr></thead>

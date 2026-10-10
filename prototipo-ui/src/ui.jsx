@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AnimatePresence, animate, motion, useInView, useReducedMotion } from "framer-motion";
-import { CheckCircle2, ChevronRight, Info, Moon, Sun } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronRight, Info, Moon, Sun } from "lucide-react";
 
 const BADGE = {
   neutral: "bg-slate-100 text-slate-600",
@@ -68,9 +68,14 @@ export function SectionHead({ title, subtitle, action }) {
   );
 }
 
-export function PageTitle({ kicker, title, lead, action }) {
+export function PageTitle({ kicker, title, lead, action, back }) {
   return (
     <div className="mb-7">
+      {back && (
+        <button onClick={back.onClick} className="-ml-1 mb-3 inline-flex items-center gap-1.5 rounded-md px-1 py-0.5 text-xs font-semibold text-slate-500 transition-colors hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-blue-600">
+          <ArrowLeft className="h-3.5 w-3.5" /> {back.label}
+        </button>
+      )}
       <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{kicker}</p>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-0">
@@ -115,9 +120,9 @@ export function CountUp({ value, format = (n) => Math.round(n).toLocaleString("p
   return <span ref={ref}>{format(shown)}</span>;
 }
 
-export function Metric({ label, value, format, foot, icon: Icon, accent = "text-slate-400" }) {
+export function Metric({ label, value, format, foot, icon: Icon, accent = "text-slate-400", className = "" }) {
   return (
-    <Card className="group relative overflow-hidden">
+    <Card className={`group relative overflow-hidden ${className}`}>
       <div className="flex items-center justify-between">
         <span className="text-xs text-slate-500">{label}</span>
         {Icon && <Icon className={`h-4 w-4 ${accent}`} aria-hidden />}

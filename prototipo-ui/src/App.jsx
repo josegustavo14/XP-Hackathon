@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { Bell, Database, FileText, LayoutDashboard, Menu, Search, Settings as SettingsIcon, Sparkles, Users, X } from "lucide-react";
 import { StoreContext, loadJSON, saveJSON } from "./store.js";
@@ -30,6 +30,8 @@ const BOTTOM_NAV = [
   ["alerts", Bell, "Alertas"],
   ["briefings", FileText, "Briefings"],
 ];
+
+const PAGES_TOP = new Set(NAV.map(([id]) => id));
 
 const PARENT = { profile: "clients", alertDetail: "alerts", briefing: "briefings", sources: "finance" };
 
@@ -99,12 +101,34 @@ export default function App() {
   useEffect(() => saveJSON("xp-alerts", alerts), [alerts]);
   useEffect(() => saveJSON("xp-notes", notes), [notes]);
 
-  const go = useCallback((page, params = null) => {
-    setRoute({ page, params });
+  // Histórico de navegação para o "Voltar" levar à tela de origem.
+  // Telas do menu principal zeram o histórico; telas de detalhe empilham.
+  const [history, setHistory] = useState([]);
+  const routeRef = useRef(route);
+  routeRef.current = route;
+
+  const show = useCallback((next) => {
+    setRoute(next);
     setMenuOpen(false);
     setCopilotOpen(false);
     window.scrollTo({ top: 0 });
   }, []);
+
+  const go = useCallback((page, params = null) => {
+    const cur = routeRef.current;
+    if (cur.page === page && cur.params === params) return show(cur);
+    setHistory((h) => (PAGES_TOP.has(page) ? [] : [...h.slice(-19), cur]));
+    show({ page, params });
+  }, [show]);
+
+  const back = useCallback(() => {
+    if (history.length) {
+      show(history[history.length - 1]);
+      setHistory((h) => h.slice(0, -1));
+    } else {
+      show({ page: PARENT[routeRef.current.page] || "dashboard", params: null });
+    }
+  }, [history, show]);
 
   const login = () => {
     try { sessionStorage.setItem("xp-login", "1"); } catch { /* sem persistência */ }
@@ -115,6 +139,8 @@ export default function App() {
     () => ({
       ...route,
       go,
+      back,
+      prev: history[history.length - 1] || { page: PARENT[route.page] || "dashboard", params: null },
       theme,
       toggleTheme,
       alerts,
@@ -140,9 +166,10 @@ export default function App() {
         try { sessionStorage.removeItem("xp-login"); } catch { /* sem persistência */ }
         setLogged(false);
         setRoute({ page: "dashboard", params: null });
+        setHistory([]);
       },
     }),
-    [route, go, theme, toggleTheme, alerts, notes, chat, ask, typing, copilotOpen]
+    [route, go, back, history, theme, toggleTheme, alerts, notes, chat, ask, typing, copilotOpen]
   );
 
   const Page = PAGES[route.page] || Dashboard;
