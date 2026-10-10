@@ -6,4 +6,10 @@
   "page": 1,
   "page_size": 20,
   "total": 2
+  "period": "week",
+  "as_of": "2026-10-10T12:00:00Z",
+  "items": [
+    { "id": "news-2026-10-10-01", "title": "Mercados acompanham dados econômicos", "published_at": "2026-10-10T10:00:00Z", "source": "synthetic" },
+    { "id": "news-2026-10-08-01", "title": "Agenda econômica da semana", "published_at": "2026-10-08T09:00:00Z", "source": "synthetic" }
+  ]
 }
