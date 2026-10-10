@@ -11,7 +11,7 @@ from uuid import UUID
 
 from pydantic import Field
 
-from app.shared.schemas import ApiModel
+from app.shared.schemas import ApiModel, PageMeta
 
 
 class CollectedNewsArticle(ApiModel):
@@ -58,6 +58,33 @@ class NewsSummary(ApiModel):
     summary: str
     highlights: list[NewsHighlight]
     generated_at: datetime
+
+
+class NewsRelevanceOut(ApiModel):
+    """Contexto explicável de uma notícia para um cliente consultado."""
+
+    client_id: UUID
+    score: float = Field(ge=0, le=1)
+    reason: str
+
+
+class NewsListItem(ApiModel):
+    """Contrato público de uma notícia no feed de inteligência de mercado."""
+
+    id: UUID
+    title: str
+    summary: str
+    source: str
+    url: str = Field(pattern=r"^https://")
+    published_at: datetime | None
+    topics: list[str] = Field(default_factory=list)
+    relevance: NewsRelevanceOut | None = None
+
+
+class NewsListResponse(ApiModel):
+    items: list[NewsListItem]
+    meta: PageMeta
+    updated_at: datetime
 
 
 class NewsRelevanceArticle(ApiModel):
