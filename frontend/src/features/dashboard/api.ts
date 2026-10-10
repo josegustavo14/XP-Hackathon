@@ -13,5 +13,9 @@ const mockDashboard: DashboardSummary = {
 };
 
 export const dashboardApi = {
-  summary: () => (env.useMocks ? Promise.resolve(mockDashboard) : request<DashboardSummary>('/dashboard/summary')),
+  summary: () => (
+    env.mode === 'mock'
+      ? Promise.resolve(mockDashboard)
+      : request<DashboardSummary>('/dashboard/summary')
+  ),
 };
