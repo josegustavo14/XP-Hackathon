@@ -81,6 +81,13 @@ class ConsentStatus(StrEnum):
     EXPIRED = "expired"
 
 
+class BriefingStatus(StrEnum):
+    DRAFT = "draft"
+    REVIEWED = "reviewed"
+    USED = "used"
+    DISCARDED = "discarded"
+
+
 class AiLogKind(StrEnum):
     CHAT = "chat"
     BRIEFING = "briefing"
