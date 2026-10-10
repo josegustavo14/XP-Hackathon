@@ -7,6 +7,8 @@ from fastapi import APIRouter, Query
 from app.features.auth.dependencies import CurrentUser
 from app.features.clients.dependencies import ClientServiceDep
 from app.features.clients.schemas import ClientDetail, ClientListItem, DashboardSummary
+from app.features.interactions.dependencies import InteractionServiceDep
+from app.features.interactions.schemas import InteractionCreate, InteractionRead
 from app.shared.enums import RiskProfile
 from app.shared.schemas import ERROR_RESPONSES, Page
 
@@ -54,6 +56,46 @@ async def get_client_by_id(
 ) -> ClientDetail:
     """Retorna cadastro consolidado, perfil de risco e indicadores do cliente."""
     return await service.get_client_by_id(client_id, advisor_id=user.id)
+
+
+@router.get(
+    "/{client_id}/interactions",
+    response_model=Page[InteractionRead],
+    summary="Histórico de atendimentos do cliente",
+)
+async def list_client_interactions(
+    client_id: UUID,
+    interactions_service: InteractionServiceDep,
+    user: CurrentUser,
+    search: str | None = Query(None, description="Busca textual na pauta ou decisões"),
+    page: int = Query(1, ge=1, description="Número da página"),
+    page_size: int = Query(25, ge=1, le=100, description="Tamanho da página"),
+) -> Page[InteractionRead]:
+    """Retorna a linha do tempo de reuniões e contatos realizados com este cliente."""
+    return await interactions_service.list_interactions(
+        advisor_id=user.id,
+        client_id=client_id,
+        search=search,
+        page=page,
+        page_size=page_size,
+    )
+
+
+@router.post(
+    "/{client_id}/interactions",
+    response_model=InteractionRead,
+    status_code=201,
+    summary="Registrar atendimento para o cliente",
+)
+async def create_client_interaction(
+    client_id: UUID,
+    payload: InteractionCreate,
+    interactions_service: InteractionServiceDep,
+    user: CurrentUser,
+) -> InteractionRead:
+    """Registra uma interação com o cliente garantindo client_id consistente."""
+    payload.client_id = client_id
+    return await interactions_service.create_interaction(advisor_id=user.id, payload=payload)
 
 
 @dashboard_router.get(
