@@ -3,6 +3,7 @@
 Funções puras: recebem os dados e a data de referência, sem I/O.
 """
 
+from collections.abc import Iterable
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -11,6 +12,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from app.features.alerts.schemas import AlertCandidate
+from app.shared.enums import AlertPriority, AlertType
 from app.shared.enums import AlertPriority, AlertType, AssetClass, IssuerType
 
 # Janelas demonstrativas (dias até o vencimento → prioridade), da mais urgente
