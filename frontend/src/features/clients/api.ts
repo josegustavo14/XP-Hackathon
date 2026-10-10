@@ -100,7 +100,7 @@ export const clientsApi = {
       searchParams.set('page', String(page));
       searchParams.set('page_size', String(pageSize));
 
-      const data = await request<Record<string, unknown>>(`/api/v1/clients?${searchParams.toString()}`);
+      const data = await request<Record<string, unknown>>(`/clients?${searchParams.toString()}`);
       const rawItems = (data.items as Array<Record<string, unknown>>) || [];
       return {
         items: rawItems.map((item) => ({
@@ -131,7 +131,7 @@ export const clientsApi = {
 
     if (!useMocks) {
       try {
-        const raw = await request<Record<string, unknown>>(`/api/v1/clients/${clientId}`);
+        const raw = await request<Record<string, unknown>>(`/clients/${clientId}`);
         return {
           id: String(raw.id ?? clientId),
           name: String(raw.name ?? 'Cliente'),
@@ -193,7 +193,7 @@ export const clientsApi = {
 
     if (!useMocks) {
       try {
-        const raw = await request<Record<string, unknown>>(`/api/v1/clients/${clientId}/portfolio`);
+        const raw = await request<Record<string, unknown>>(`/clients/${clientId}/portfolio`);
         return {
           client_id: String(raw.client_id ?? clientId),
           as_of: String(raw.as_of ?? new Date().toISOString()),
@@ -226,7 +226,7 @@ export const clientsApi = {
 
     if (!useMocks) {
       try {
-        const raw = await request<Record<string, unknown>>(`/api/v1/clients/${clientId}/interactions`);
+        const raw = await request<Record<string, unknown>>(`/clients/${clientId}/interactions`);
         const items = (raw.items as ClientInteractionItem[]) || [];
         if (items.length > 0) return items;
       } catch (err) {
@@ -252,7 +252,7 @@ export const clientsApi = {
 
     if (!useMocks) {
       try {
-        const res = await request<Record<string, unknown>>(`/api/v1/clients/${clientId}/interactions`, {
+        const res = await request<Record<string, unknown>>(`/clients/${clientId}/interactions`, {
           method: 'POST',
           body: JSON.stringify(payload),
         });

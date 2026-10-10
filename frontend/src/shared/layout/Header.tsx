@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, Search } from 'lucide-react';
 import { env } from '../config/env';
@@ -10,6 +10,18 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onToggleMobile }) => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        navigate('/clients');
+      }
+    };
+
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  }, [navigate]);
 
   return (
     <header className="topbar">
@@ -33,6 +45,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobile }) => {
       >
         <Search size={16} />
         <span>Buscar clientes e informações...</span>
+        <kbd>⌘ K</kbd>
       </div>
 
       <div style={{ flex: 1 }} />
