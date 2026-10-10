@@ -121,45 +121,48 @@ export const normalizeRiskProfileToContract = (profile: string): string => {
   return profile;
 };
 
+function listMockClients(params: ClientFilterParams): ClientsListResponse {
+  const page = params.page ?? 1;
+  const pageSize = params.page_size ?? 10;
+  const query = (params.query ?? '').trim().toLowerCase();
+  const risk = params.risk_profile ?? 'Todos';
+  let filtered = [...MOCK_CLIENTS];
+
+  if (query) {
+    filtered = filtered.filter(
+      (client) =>
+        client.name.toLowerCase().includes(query) ||
+        client.city.toLowerCase().includes(query) ||
+        (client.email && client.email.toLowerCase().includes(query)) ||
+        (client.primary_objective && client.primary_objective.toLowerCase().includes(query)),
+    );
+  }
+
+  if (risk && risk !== 'Todos') {
+    const targetRisk = normalizeRiskProfile(risk);
+    filtered = filtered.filter((client) => normalizeRiskProfile(client.risk_profile) === targetRisk);
+  }
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const startIndex = (page - 1) * pageSize;
+  return {
+    items: filtered.slice(startIndex, startIndex + pageSize),
+    page,
+    page_size: pageSize,
+    total,
+    total_pages: totalPages,
+  };
+}
+
 export const clientsApi = {
   list: async (params: ClientFilterParams = {}): Promise<ClientsListResponse> => {
-    const useMocks = env.useMocks;
     const page = params.page ?? 1;
     const pageSize = params.page_size ?? 10;
     const query = (params.query ?? '').trim().toLowerCase();
     const risk = params.risk_profile ?? 'Todos';
 
-    if (useMocks) {
-      let filtered = [...MOCK_CLIENTS];
-
-      if (query) {
-        filtered = filtered.filter(
-          (c) =>
-            c.name.toLowerCase().includes(query) ||
-            c.city.toLowerCase().includes(query) ||
-            (c.email && c.email.toLowerCase().includes(query)) ||
-            (c.primary_objective && c.primary_objective.toLowerCase().includes(query)),
-        );
-      }
-
-      if (risk && risk !== 'Todos') {
-        const targetRisk = normalizeRiskProfile(risk);
-        filtered = filtered.filter((c) => normalizeRiskProfile(c.risk_profile) === targetRisk);
-      }
-
-      const total = filtered.length;
-      const totalPages = Math.max(1, Math.ceil(total / pageSize));
-      const startIndex = (page - 1) * pageSize;
-      const paginatedItems = filtered.slice(startIndex, startIndex + pageSize);
-
-      return {
-        items: paginatedItems,
-        page,
-        page_size: pageSize,
-        total,
-        total_pages: totalPages,
-      };
-    }
+    if (env.mode === 'mock') return listMockClients(params);
 
     try {
       const searchParams = new URLSearchParams();
@@ -192,7 +195,7 @@ export const clientsApi = {
       };
     } catch (err) {
       console.warn('Fallback para mock de clientes após erro na API:', err);
-      return clientsApi.list({ ...params, page, page_size: pageSize });
+      return listMockClients({ ...params, page, page_size: pageSize });
     }
   },
 };

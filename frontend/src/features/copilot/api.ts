@@ -31,7 +31,7 @@ function createMockResponse(payload: CopilotChatRequest): CopilotChatResponse {
 }
 
 export const copilotApi = {
-  chat: (payload: CopilotChatRequest) => (env.useMocks
+  chat: (payload: CopilotChatRequest) => (env.mode === 'mock'
     ? Promise.resolve(createMockResponse(payload))
     : request<CopilotChatResponse>('/copilot/chat', {
       method: 'POST',

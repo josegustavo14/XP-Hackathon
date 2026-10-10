@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import Any, Literal
 from uuid import UUID
 
+from pydantic import Field
+
 from app.shared.enums import AlertPriority, AlertStatus, AlertType
 from app.shared.schemas import ApiModel
 
@@ -13,6 +15,17 @@ class SourceRef(ApiModel):
 
     type: str
     id: UUID
+
+
+class AlertCandidate(ApiModel):
+    """Alerta ainda não persistido, gerado por uma regra determinística."""
+
+    type: AlertType
+    priority: AlertPriority
+    client_id: UUID
+    title: str
+    facts: dict[str, Any]
+    source_refs: list[SourceRef] = Field(default_factory=list)
 
 
 class AlertOut(ApiModel):
