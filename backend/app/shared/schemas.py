@@ -35,6 +35,7 @@ ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
     404: {"model": ErrorResponse, "description": "Recurso inexistente"},
     422: {"model": ErrorResponse, "description": "Erro de validação"},
     500: {"model": ErrorResponse, "description": "Erro inesperado"},
+    503: {"model": ErrorResponse, "description": "Serviço temporariamente indisponível"},
 }
 
 
