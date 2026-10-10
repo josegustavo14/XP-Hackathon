@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle, ArrowLeft, ArrowRight, Bell, Building2, CalendarClock, CheckCircle2, Copy, Database, FileText, Landmark,
@@ -676,32 +676,34 @@ export function Copilot() {
 
 export function Briefings() {
   const { go } = useStore();
+  const agenda = [...clients].sort((a, b) => daysUntil(a.contact) - daysUntil(b.contact));
+  const nextBadge = <Badge tone="blue">Próximo</Badge>;
   return (
     <>
       <PageTitle kicker="Preparação de reuniões" title="Briefings inteligentes" lead="Resumos de clientes e pautas de atendimento para revisão humana." />
       <Card>
-        <SectionHead title="Próximos atendimentos" />
+        <SectionHead title="Próximos atendimentos" subtitle="Em ordem de data · abra um cliente para ver a pauta" />
         <MobileList>
-          {clients.map((x, i) => (
+          {agenda.map((x, i) => (
             <MobileRow key={x.id} index={i} onClick={() => go("briefing", x.id)}>
               <div className="flex items-baseline justify-between gap-3">
-                <span className="truncate text-sm font-semibold text-slate-900">{x.name}</span>
+                <span className="flex min-w-0 items-center gap-2"><span className="truncate text-sm font-semibold text-slate-900">{x.name}</span>{i === 0 && nextBadge}</span>
                 <span className="shrink-0 text-xs text-slate-500">{x.contact.slice(0, 5)} · em {daysUntil(x.contact)} dias</span>
               </div>
               <p className="mt-0.5 text-xs text-slate-500">{x.objective}</p>
-              <span className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-blue-800"><FileText className="h-3.5 w-3.5" /> Gerar briefing</span>
+              <span className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-blue-800"><FileText className="h-3.5 w-3.5" /> Ver briefing</span>
             </MobileRow>
           ))}
         </MobileList>
         <TableWrap desktopOnly>
           <thead><tr><Th>Cliente</Th><Th>Data prevista</Th><Th>Objetivo</Th><Th /></tr></thead>
           <tbody>
-            {clients.map((x, i) => (
+            {agenda.map((x, i) => (
               <AnimatedRow key={x.id} index={i}>
-                <Td><ClientLink id={x.id} /></Td>
+                <Td><span className="inline-flex items-center gap-2"><ClientLink id={x.id} />{i === 0 && nextBadge}</span></Td>
                 <Td>{x.contact} <span className="text-slate-400">· em {daysUntil(x.contact)} dias</span></Td>
                 <Td className="whitespace-normal">{x.objective}</Td>
-                <Td><Button variant="primary" onClick={() => go("briefing", x.id)}><FileText className="h-3.5 w-3.5" /> Gerar briefing</Button></Td>
+                <Td className="text-right"><Button onClick={() => go("briefing", x.id)}><FileText className="h-3.5 w-3.5" /> Ver briefing</Button></Td>
               </AnimatedRow>
             ))}
           </tbody>
@@ -715,22 +717,25 @@ export function Briefing() {
   const { params, alerts, notes, go } = useStore();
   const toast = useToast();
   const x = clientById(params);
-  const [phase, setPhase] = useState("idle");
+  const [phase, setPhase] = useState("loading");
+  const [run, setRun] = useState(0);
   const ref = useRef(null);
-  const related = alerts.filter((a) => a.cid === x.id);
+  const related = alerts.filter((a) => a.cid === x.id && a.status === "Pendente");
   const last = notes.find((n) => n.cid === x.id);
 
-  function generate() {
+  // Gera ao abrir a tela; "Regenerar" incrementa run e repete.
+  useEffect(() => {
     setPhase("loading");
-    setTimeout(() => setPhase("ready"), 1100);
-  }
+    const t = setTimeout(() => setPhase("ready"), 1100);
+    return () => clearTimeout(t);
+  }, [x.id, run]);
   function copy() {
     navigator.clipboard.writeText(ref.current?.innerText || "").then(() => toast("Briefing copiado")).catch(() => toast("Não foi possível copiar"));
   }
 
   const sections = [
     ["1. Resumo executivo", <p key="p">{x.name} tem perfil {x.risk.toLowerCase()}, patrimônio fictício de {money(x.wealth)} e objetivo principal de {x.objective.toLowerCase()}. A carteira contempla {x.inst} instituições simuladas.</p>],
-    ["2. Pontos de atenção", <ul key="u" className="list-disc pl-5">{related.length ? related.map((a) => <li key={a.id}>{a.title} — prioridade {a.severity.toLowerCase()}.</li>) : <li>Nenhum alerta registrado para este perfil.</li>}</ul>],
+    ["2. Pontos de atenção", <ul key="u" className="list-disc pl-5">{related.length ? related.map((a) => <li key={a.id}>{a.title} — prioridade {a.severity.toLowerCase()}.</li>) : <li>Nenhum alerta em aberto para este cliente.</li>}</ul>],
     ["3. Histórico relevante", <p key="p">{last ? last.text : "Ainda não há registros de atendimento para este cliente."}</p>],
     ["4. Perguntas sugeridas", <ul key="u" className="list-disc pl-5"><li>Seus objetivos financeiros continuam os mesmos?</li><li>Houve mudanças na necessidade de liquidez?</li><li>Como você avalia sua carteira atual em relação aos seus planos?</li></ul>],
     ["5. Próximos passos", <p key="p">Revisar as informações, conversar com o cliente e registrar decisões após o atendimento.</p>],
@@ -742,14 +747,9 @@ export function Briefing() {
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(290px,.8fr)]">
         <Card>
           <SectionHead title="Preparação da reunião" action={<Badge tone="blue">Revisão obrigatória</Badge>} />
-          {phase === "idle" && (
-            <>
-              <p className="mb-4 text-sm text-slate-500">Gere uma pauta considerando cadastro, investimentos e histórico do cliente.</p>
-              <Button variant="primary" onClick={generate}><Sparkles className="h-3.5 w-3.5" /> Gerar briefing</Button>
-            </>
-          )}
           {phase === "loading" && (
-            <div className="space-y-3" aria-label="Gerando briefing">
+            <div className="space-y-3" role="status" aria-label="Gerando briefing">
+              <p className="mb-4 flex items-center gap-2 text-sm text-slate-500"><Sparkles className="h-3.5 w-3.5 text-slate-400" /> Montando a pauta com cadastro, carteira, alertas e histórico…</p>
               {[90, 70, 85, 60, 75].map((w, i) => (
                 <motion.div key={i} className="h-3.5 rounded bg-slate-200" style={{ width: `${w}%` }} animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.1 }} />
               ))}
@@ -767,7 +767,7 @@ export function Briefing() {
               </div>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Button variant="primary" onClick={copy}><Copy className="h-3.5 w-3.5" /> Copiar briefing</Button>
-                <Button onClick={() => setPhase("idle")}><RotateCcw className="h-3.5 w-3.5" /> Regenerar</Button>
+                <Button onClick={() => setRun((n) => n + 1)}><RotateCcw className="h-3.5 w-3.5" /> Regenerar</Button>
               </div>
             </>
           )}
@@ -777,7 +777,7 @@ export function Briefing() {
           <ul className="mb-4 space-y-2 text-sm text-slate-500">
             <li>Dados cadastrais • {x.contact}</li>
             <li>Carteira simulada • 09/10/2026</li>
-            <li>Alertas associados • {related.length}</li>
+            <li>Alertas em aberto • {related.length}</li>
             <li>Histórico de atendimento • {last ? "Disponível" : "Não disponível"}</li>
           </ul>
           <Helper>Conteúdo demonstrativo gerado por modelo de regras. Não há consulta a serviço externo de IA nesta versão.</Helper>
