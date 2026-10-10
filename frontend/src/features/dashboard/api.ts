@@ -143,12 +143,12 @@ const mockNewsWeek: NewsResponse = {
 
 export const dashboardApi = {
   summary: (): Promise<DashboardSummary> =>
-    env.useMocks
+    env.mode === 'mock'
       ? Promise.resolve(mockDashboard)
       : request<DashboardSummary>('/dashboard/summary'),
 
   news: (period: 'day' | 'week' = 'day'): Promise<NewsResponse> =>
-    env.useMocks
+    env.mode === 'mock'
       ? Promise.resolve(period === 'day' ? mockNewsDay : mockNewsWeek)
       : request<NewsResponse>(`/news?period=${period}`),
 };

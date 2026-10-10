@@ -5,7 +5,8 @@ import { ClientFilters } from './components/ClientFilters';
 import { ClientTable } from './components/ClientTable';
 import { ClientPagination } from './components/ClientPagination';
 import { MarketIntelligence } from '../dashboard/components/MarketIntelligence';
-import { clientsApi, type ClientItem } from './api';
+import { clientsApi } from './api';
+import type { ClientItem } from './types';
 
 export const ClientsPage: React.FC = () => {
   const [query, setQuery] = useState('');

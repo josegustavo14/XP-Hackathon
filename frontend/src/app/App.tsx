@@ -4,6 +4,7 @@ import { PageHeader } from '../shared/ui/PageHeader';
 import { Card } from '../shared/ui/Card';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { ClientsPage } from '../features/clients/ClientsPage';
+import { ClientProfilePage } from '../features/clients/ClientProfilePage';
 import { CopilotPage } from '../features/copilot/CopilotPage';
 import '../styles.css';
 
@@ -18,17 +19,6 @@ function FeaturePlaceholder({ kicker, title, description }: { kicker: string; ti
         </div>
       </Card>
     </div>
-  );
-}
-
-function ClientDetailPlaceholder() {
-  const { clientId } = useParams<{ clientId: string }>();
-  return (
-    <FeaturePlaceholder
-      kicker="Perfil 360º"
-      title={`Cliente #${clientId}`}
-      description="Visualização consolidada do investidor, carteira e histórico de relacionamento."
-    />
   );
 }
 
@@ -53,7 +43,7 @@ export function App() {
 
           {/* Rotas de Clientes */}
           <Route path="clients" element={<ClientsPage />} />
-          <Route path="clients/:clientId" element={<ClientDetailPlaceholder />} />
+          <Route path="clients/:clientId" element={<ClientProfilePage />} />
 
           {/* Rotas de Alertas */}
           <Route
