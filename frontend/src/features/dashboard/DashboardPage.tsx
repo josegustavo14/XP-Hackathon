@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { dashboardApi } from './api';
 import { formatMoney } from '../../shared/formatters/money';
@@ -8,9 +8,11 @@ import { MetricCard } from '../../shared/ui/MetricCard';
 import { Card, SectionHead } from '../../shared/ui/Card';
 import { Badge } from '../../shared/ui/Badge';
 import { Button } from '../../shared/ui/Button';
-import type { DashboardSummary } from '../../shared/api/generated';
+import { MarketIntelligence } from './components/MarketIntelligence';
+import { SuitabilityDistribution } from './components/SuitabilityDistribution';
+import type { AlertPriority, DashboardPriorityItem, DashboardSummary, RiskProfile } from '../../shared/api/generated';
 
-const getRiskBadgeVariant = (risk: string) => {
+const getRiskBadgeVariant = (risk: RiskProfile | string) => {
   switch (risk) {
     case 'conservative':
       return 'blue';
@@ -23,7 +25,7 @@ const getRiskBadgeVariant = (risk: string) => {
   }
 };
 
-const getRiskLabel = (risk: string) => {
+const getRiskLabel = (risk: RiskProfile | string) => {
   switch (risk) {
     case 'conservative':
       return 'Conservador';
@@ -36,7 +38,20 @@ const getRiskLabel = (risk: string) => {
   }
 };
 
-export function DashboardPage() {
+const getSeverityBadge = (severity: AlertPriority | string) => {
+  switch (severity) {
+    case 'high':
+      return <Badge variant="red">Alta prioridade</Badge>;
+    case 'medium':
+      return <Badge variant="gold">Média prioridade</Badge>;
+    case 'low':
+      return <Badge variant="green">Baixa prioridade</Badge>;
+    default:
+      return <Badge variant="slate">{severity}</Badge>;
+  }
+};
+
+export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<DashboardSummary>();
   const [error, setError] = useState<string>();
@@ -49,7 +64,7 @@ export function DashboardPage() {
       .summary()
       .then(setData)
       .catch((reason: unknown) => {
-        setError(reason instanceof Error ? reason.message : 'Erro inesperado.');
+        setError(reason instanceof Error ? reason.message : 'Erro inesperado ao carregar o dashboard.');
       })
       .finally(() => setLoading(false));
   }, []);
@@ -60,14 +75,38 @@ export function DashboardPage() {
 
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={error} onRetry={load} />;
-  if (!data) return <EmptyState message="Não há dados para exibir." />;
+  if (!data) return <EmptyState message="Não há dados para exibir no momento." />;
+
+  // Normalização de dados para suportar tanto o contrato #9 quanto os mocks do EP00
+  const totalClients = data.clients_total ?? data.client_count ?? 0;
+  const totalAssets = data.total_assets ?? data.managed_assets ?? '0';
+  const openAlerts = data.open_alerts ?? 0;
+
+  // Normaliza lista de prioridades
+  const priorities: DashboardPriorityItem[] =
+    data.priorities ??
+    (data.priority_clients?.map((pc) => ({
+      client: {
+        id: pc.id,
+        name: pc.name,
+        risk_profile: pc.risk_profile,
+        total_assets: pc.total_assets,
+      },
+      reason_type: 'attention',
+      reason_label: `Atenção prioritária (${pc.open_alerts} alerta(s))`,
+      severity: (pc.attention_level === 'high' ? 'high' : 'medium') as AlertPriority,
+      alert_id: null,
+    })) || []);
+
+  const needAttention = data.clients_need_attention ?? priorities.length;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* Cabeçalho da Página */}
       <PageHeader
         kicker="Visão geral"
         title="Bom dia, assessor"
-        lead="Acompanhe sua base e comece pelas situações mais relevantes."
+        lead="Acompanhe sua base e comece pelas situações de maior relevância para o cliente."
         action={
           <Button variant="primary" onClick={() => navigate('/copilot')}>
             ✦ Perguntar ao copiloto
@@ -75,77 +114,94 @@ export function DashboardPage() {
         }
       />
 
-      {/* Grid de 4 Métricas Principais */}
+      {/* Grid de 4 Indicadores-Chave */}
       <div className="grid4">
         <MetricCard
           label="Clientes sob gestão"
-          value={data.client_count}
-          foot="Base ativa de investidores"
+          value={totalClients}
+          foot="Base de investidores acompanhada"
         />
         <MetricCard
           label="Precisam de atenção"
-          value={data.priority_clients.length}
-          foot="Com alertas ou revisões pendentes"
+          value={needAttention}
+          foot="Com ocorrências priorizadas"
         />
         <MetricCard
           label="Alertas em aberto"
-          value={data.open_alerts}
-          foot="Priorizados por gravidade"
+          value={openAlerts}
+          foot="Monitorados pelas regras do motor"
         />
         <MetricCard
           label="Patrimônio sob gestão"
-          value={formatMoney(data.managed_assets)}
-          foot="Total consolidado da carteira"
+          value={formatMoney(totalAssets)}
+          foot="Consolidado da carteira"
         />
       </div>
 
-      {/* Seção Principal: Atendimentos Prioritários */}
+      {/* Bloco Central: Prioridades + Distribuição e Ações Rápidas */}
       <div className="split">
+        {/* Tabela de Atendimentos Prioritários */}
         <Card>
           <SectionHead
             title="Prioridades de atendimento"
-            description="Situações identificadas pelo motor de riscos e oportunidades"
+            description="Situações identificadas para contato proativo"
             action={
               <Button variant="secondary" onClick={() => navigate('/alerts')}>
-                Ver todos os alertas
+                Ver central de alertas →
               </Button>
             }
           />
 
-          {data.priority_clients.length === 0 ? (
-            <EmptyState message="Nenhum atendimento prioritário pendente." />
+          {priorities.length === 0 ? (
+            <EmptyState message="Nenhum atendimento prioritário no momento." />
           ) : (
             <div className="tablewrap">
               <table>
                 <thead>
                   <tr>
                     <th>Cliente</th>
-                    <th>Perfil de Suitability</th>
-                    <th>Patrimônio Total</th>
+                    <th>Suitability</th>
+                    <th>Motivo da Ocorrência</th>
+                    <th>Prioridade</th>
                     <th style={{ textAlign: 'right' }}>Ação</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.priority_clients.map((client) => (
-                    <tr key={client.id}>
+                  {priorities.map((item, idx) => (
+                    <tr key={item.client.id || idx}>
                       <td>
-                        <strong>{client.name}</strong>
+                        <strong>{item.client.name}</strong>
+                        {item.client.total_assets && (
+                          <div style={{ color: 'var(--muted)', fontSize: 11, marginTop: 2 }}>
+                            {formatMoney(item.client.total_assets)}
+                          </div>
+                        )}
                       </td>
                       <td>
-                        <Badge variant={getRiskBadgeVariant(client.risk_profile)}>
-                          {getRiskLabel(client.risk_profile)}
+                        <Badge variant={getRiskBadgeVariant(item.client.risk_profile)}>
+                          {getRiskLabel(item.client.risk_profile)}
                         </Badge>
                       </td>
                       <td>
-                        <strong>{formatMoney(client.total_assets)}</strong>
+                        <span style={{ fontWeight: 600 }}>{item.reason_label}</span>
                       </td>
-                      <td style={{ textAlign: 'right' }}>
+                      <td>{getSeverityBadge(item.severity)}</td>
+                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                         <Button
                           variant="link"
-                          onClick={() => navigate(`/clients/${client.id}`)}
+                          onClick={() => navigate(`/clients/${item.client.id}`)}
                         >
-                          Abrir perfil →
+                          Abrir →
                         </Button>
+                        {item.alert_id && (
+                          <Button
+                            variant="link"
+                            style={{ marginLeft: 12, color: 'var(--muted)' }}
+                            onClick={() => navigate(`/alerts/${item.alert_id}`)}
+                          >
+                            Alerta
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -155,43 +211,44 @@ export function DashboardPage() {
           )}
         </Card>
 
-        {/* Card Lateral de Apoio Rápido */}
-        <Card>
-          <SectionHead
-            title="Atalhos do copiloto"
-            description="Ações rápidas para a sua rotina"
-          />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ padding: '12px 14px', background: '#f5f7f9', borderRadius: 9 }}>
-              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
-                ✦ Preparar briefing do dia
-              </div>
-              <p style={{ margin: 0, fontSize: 12, color: 'var(--muted)' }}>
-                Gere resumos consolidados com pautas e alertas para reuniões.
-              </p>
-              <div style={{ marginTop: 10 }}>
-                <Button variant="primary" onClick={() => navigate('/briefings')}>
-                  Ir para Briefings →
-                </Button>
-              </div>
-            </div>
+        {/* Coluna Direita: Distribuição da Base e Ações Rápidas */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <SuitabilityDistribution />
 
-            <div style={{ padding: '12px 14px', background: '#f5f7f9', borderRadius: 9 }}>
-              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
-                ◎ Base de clientes
-              </div>
-              <p style={{ margin: 0, fontSize: 12, color: 'var(--muted)' }}>
-                Pesquise e filtre investidores por objetivos e carteira.
-              </p>
-              <div style={{ marginTop: 10 }}>
-                <Button variant="secondary" onClick={() => navigate('/clients')}>
-                  Buscar clientes →
-                </Button>
-              </div>
+          <Card>
+            <SectionHead
+              title="Ações rápidas"
+              description="Ferramentas para o seu dia"
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <Button
+                variant="primary"
+                style={{ width: '100%', justifyContent: 'flex-start' }}
+                onClick={() => navigate('/briefings')}
+              >
+                ▤ Preparar briefing de reunião
+              </Button>
+              <Button
+                variant="secondary"
+                style={{ width: '100%', justifyContent: 'flex-start' }}
+                onClick={() => navigate('/clients')}
+              >
+                ◎ Consultar base de clientes
+              </Button>
+              <Button
+                variant="secondary"
+                style={{ width: '100%', justifyContent: 'flex-start' }}
+                onClick={() => navigate('/finance')}
+              >
+                ◫ Visualizar dados consolidados
+              </Button>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
       </div>
+
+      {/* Bloco de Notícias e Inteligência de Mercado (EP08) */}
+      <MarketIntelligence />
     </div>
   );
-}
+};
