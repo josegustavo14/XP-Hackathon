@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Badge, type BadgeVariant } from '../../../shared/ui/Badge';
 import { formatMoney } from '../../../shared/formatters/money';
-import type { ClientItem } from '../api';
+import type { ClientItem } from '../types';
 import { normalizeRiskProfile } from '../api';
 
 interface ClientTableProps {

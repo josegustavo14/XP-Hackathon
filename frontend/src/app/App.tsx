@@ -1,11 +1,18 @@
-import { BrowserRouter, Route, Routes, useParams } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AppLayout } from '../shared/layout/AppLayout';
 import { PageHeader } from '../shared/ui/PageHeader';
 import { Card } from '../shared/ui/Card';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { ClientsPage } from '../features/clients/ClientsPage';
-import { MarketIntelligence } from '../features/dashboard/components/MarketIntelligence';
+import { ClientProfilePage } from '../features/clients/ClientProfilePage';
 import { CopilotPage } from '../features/copilot/CopilotPage';
+import {
+  AlertDetailDemoPage,
+  AlertsDemoPage,
+  BriefingsDemoPage,
+  FinanceDemoPage,
+  SettingsDemoPage,
+} from '../features/demo/DemoPages';
 import '../styles.css';
 
 function FeaturePlaceholder({ kicker, title, description }: { kicker: string; title: string; description: string }) {
@@ -22,31 +29,6 @@ function FeaturePlaceholder({ kicker, title, description }: { kicker: string; ti
   );
 }
 
-function ClientDetailPlaceholder() {
-  const { clientId } = useParams<{ clientId: string }>();
-  return (
-    <div>
-      <PageHeader
-        kicker="Perfil 360º"
-        title={`Cliente #${clientId}`}
-        lead="Visualização consolidada do investidor, carteira e histórico de relacionamento."
-      />
-      <MarketIntelligence clientId={clientId} />
-    </div>
-  );
-}
-
-function AlertDetailPlaceholder() {
-  const { alertId } = useParams<{ alertId: string }>();
-  return (
-    <FeaturePlaceholder
-      kicker="Monitoramento"
-      title={`Alerta #${alertId}`}
-      description="Detalhamento da ocorrência, evidências dos dados e ações sugeridas."
-    />
-  );
-}
-
 export function App() {
   return (
     <BrowserRouter>
@@ -57,20 +39,11 @@ export function App() {
 
           {/* Rotas de Clientes */}
           <Route path="clients" element={<ClientsPage />} />
-          <Route path="clients/:clientId" element={<ClientDetailPlaceholder />} />
+          <Route path="clients/:clientId" element={<ClientProfilePage />} />
 
           {/* Rotas de Alertas */}
-          <Route
-            path="alerts"
-            element={
-              <FeaturePlaceholder
-                kicker="Monitoramento inteligente"
-                title="Alertas e oportunidades"
-                description="Situações priorizadas por regras explicáveis para apoiar o assessor."
-              />
-            }
-          />
-          <Route path="alerts/:alertId" element={<AlertDetailPlaceholder />} />
+          <Route path="alerts" element={<AlertsDemoPage />} />
+          <Route path="alerts/:alertId" element={<AlertDetailDemoPage />} />
 
           {/* Copiloto IA */}
           <Route
@@ -79,38 +52,11 @@ export function App() {
           />
 
           {/* Briefings */}
-          <Route
-            path="briefings"
-            element={
-              <FeaturePlaceholder
-                kicker="Preparação de reuniões"
-                title="Briefings inteligentes"
-                description="Pautas de reunião e pontos de atenção consolidados para revisão humana."
-              />
-            }
-          />
+          <Route path="briefings" element={<BriefingsDemoPage />} />
 
           {/* Dados integrados e Configurações */}
-          <Route
-            path="finance"
-            element={
-              <FeaturePlaceholder
-                kicker="Consolidação patrimonial"
-                title="Dados integrados"
-                description="Fontes financeiras normalizadas (XP e Open Finance com consentimento)."
-              />
-            }
-          />
-          <Route
-            path="settings"
-            element={
-              <FeaturePlaceholder
-                kicker="Administração"
-                title="Configurações"
-                description="Permissões, dados da demonstração e ambiente do assessor."
-              />
-            }
-          />
+          <Route path="finance" element={<FinanceDemoPage />} />
+          <Route path="settings" element={<SettingsDemoPage />} />
 
           {/* Fallback para rota desconhecida */}
           <Route

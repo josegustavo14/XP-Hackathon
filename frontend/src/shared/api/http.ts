@@ -1,6 +1,24 @@
 import { env } from '../config/env';
 import type { ApiErrorPayload } from './generated';
 
+let demoAccessToken: string | undefined;
+
+async function getAccessToken(): Promise<string | undefined> {
+  if (env.accessToken) return env.accessToken;
+  if (env.mode !== 'local') return undefined;
+  if (demoAccessToken) return demoAccessToken;
+
+  const response = await fetch(`${env.apiBaseUrl}/auth/login`, {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'assessor@demo.com', password: 'string' }),
+  });
+  if (!response.ok) throw new ApiConfigurationError('Não foi possível iniciar a sessão demonstrativa da API local.');
+  const payload = await response.json() as { access_token: string };
+  demoAccessToken = payload.access_token;
+  return demoAccessToken;
+}
+
 export class ApiConfigurationError extends Error {
   constructor(message: string) {
     super(message);
@@ -24,19 +42,20 @@ export class ApiError extends Error {
   }
 }
 
-export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function fetchAuthorized(path: string, init?: RequestInit): Promise<Response> {
   if (!env.apiBaseUrl) {
     throw new ApiConfigurationError(
       'Defina VITE_API_REMOTE_BASE_URL para usar a API remota.',
     );
   }
 
+  const accessToken = await getAccessToken();
   const response = await fetch(`${env.apiBaseUrl}${path}`, {
     ...init,
     headers: {
       Accept: 'application/json',
-      'Content-Type': 'application/json',
-      ...(env.accessToken ? { Authorization: `Bearer ${env.accessToken}` } : {}),
+      ...(init?.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...init?.headers,
     },
   });
@@ -59,6 +78,16 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw error;
   }
 
+  return response;
+}
+
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetchAuthorized(path, init);
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
+}
+
+export async function requestBlob(path: string): Promise<Blob> {
+  const response = await fetchAuthorized(path);
+  return response.blob();
 }

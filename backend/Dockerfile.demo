@@ -1,0 +1,22 @@
+FROM python:3.12-slim
+
+WORKDIR /app/backend
+
+COPY backend/requirements.txt backend/requirements.demo.txt ./
+RUN pip install --no-cache-dir -r requirements.demo.txt
+
+# Modelo local de transcrição em português, disponível mesmo sem rede em runtime.
+RUN python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='Systran/faster-whisper-base', local_dir='/opt/whisper-model')"
+
+COPY backend/app ./app
+
+ENV AUTH_MODE=mock \
+    MOCK_AUTH_EMAIL=assessor@demo.com \
+    MOCK_AUTH_PASSWORD=string \
+    LOCAL_JWT_SECRET=local-demo-secret-with-at-least-32-characters \
+    PYTHONDONTWRITEBYTECODE=1 \
+    WHISPER_MODEL_PATH=/opt/whisper-model
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

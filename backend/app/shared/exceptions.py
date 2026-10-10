@@ -49,3 +49,8 @@ class NotFoundError(DomainError):
 class ConflictError(DomainError):
     code = "CONFLICT"
     message = "Conflito com o estado atual do recurso."
+
+
+class ServiceUnavailableError(DomainError):
+    code = "SERVICE_UNAVAILABLE"
+    message = "Serviço temporariamente indisponível."
