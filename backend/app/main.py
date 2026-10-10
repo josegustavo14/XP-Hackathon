@@ -62,6 +62,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # 5. Registro modular das features sob /api/v1
     app.include_router(auth.router, prefix=f"{API_V1_PREFIX}/auth", tags=["auth"])
     app.include_router(clients.router, prefix=f"{API_V1_PREFIX}/clients", tags=["clients"])
+    app.include_router(
+        clients.dashboard_router, prefix=f"{API_V1_PREFIX}/dashboard", tags=["dashboard"]
+    )
     app.include_router(portfolios.router, prefix=f"{API_V1_PREFIX}/portfolios", tags=["portfolios"])
     app.include_router(alerts.router, prefix=f"{API_V1_PREFIX}/alerts", tags=["alerts"])
     app.include_router(
