@@ -1,1 +1,8 @@
-{"items":[{"id":"0199d9ea-8af8-7e7b-b631-3bcb04a8b901","title":"Mercado acompanha decisão de juros","summary":"Investidores acompanham os próximos dados econômicos.","published_at":"2026-10-10T08:00:00-03:00","source_name":"Agência Exemplo","url":null,"source":"synthetic"}],"meta":{"page":1,"page_size":25,"total":1,"total_pages":1}}
+{
+  "items": [
+    { "id": "00000000-0000-0000-0000-000000005001", "title": "Mercado acompanha decisão de juros", "summary": "Investidores acompanham os próximos dados econômicos.", "published_at": "2026-10-10T08:00:00Z", "source_name": "Agência Exemplo", "url": null, "source": "news" }
+  ],
+  "page": 1,
+  "page_size": 20,
+  "total": 1
+}

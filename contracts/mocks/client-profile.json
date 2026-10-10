@@ -1,1 +1,9 @@
-{"id":"0199d9ea-8af8-7e7b-b631-3bcb04a8b601","name":"Mariana Costa","email":"mariana.costa@example.test","risk_profile":"moderate","total_assets":"1280000.00","open_alerts":2,"attention_level":"high"}
+{
+  "id": "00000000-0000-0000-0000-000000000001",
+  "name": "Mariana Costa",
+  "email": "mariana.costa@example.test",
+  "risk_profile": "moderate",
+  "total_assets": "1280000.00",
+  "open_alerts": 2,
+  "attention_level": "high"
+}
