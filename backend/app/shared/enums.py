@@ -45,6 +45,7 @@ class AlertType(StrEnum):
     IDLE_CASH = "idle_cash"
     SUITABILITY_MISMATCH = "suitability_mismatch"
     LOW_DIVERSIFICATION = "low_diversification"
+    ASSET_CLASS_CONCENTRATION = "asset_class_concentration"
     SUITABILITY_EXPIRING = "suitability_expiring"
 
 
