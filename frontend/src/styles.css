@@ -564,6 +564,234 @@ tr:hover td {
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/* Notícias e Inteligência de Mercado (EP08)                                   */
+/* -------------------------------------------------------------------------- */
+
+.news-panel {
+  margin-top: 24px;
+}
+
+.news-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.news-tab {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  padding: 8px 14px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.news-tab:hover {
+  border-color: #a4aab3;
+}
+
+.news-tab.selected {
+  background: var(--dark);
+  border-color: var(--dark);
+  color: #ffffff;
+}
+
+.news-meta {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.news-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.news-item {
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 16px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.15s;
+}
+
+.news-item:hover {
+  border-color: #cbd2dc;
+}
+
+.news-item h3 {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 8px 0 8px;
+  color: var(--ink);
+}
+
+.news-item p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0 0 12px;
+  flex: 1;
+}
+
+.news-item .news-foot {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid #f4f5f8;
+}
+
+.news-disclaimer {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 16px 0 0;
+  line-height: 1.5;
+}
+
+/* Barras de Distribuição */
+.barline {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f2f4f7;
+}
+
+.barline:last-child {
+  border-bottom: 0;
+}
+
+.barline b {
+  width: 100px;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.bar {
+  height: 10px;
+  background: #eef0f4;
+  border-radius: 10px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.bar > span {
+  height: 100%;
+  display: block;
+  border-radius: 10px;
+}
+
+@media (max-width: 1100px) {
+  .news-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .news-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Client List & Filters (Issue #10)                                          */
+/* -------------------------------------------------------------------------- */
+
+.filters {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-field-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 280px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.search-field {
+  width: 100%;
+  padding-left: 36px;
+  padding-right: 32px;
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-search-btn:hover {
+  color: var(--ink);
+}
+
+.select-field-wrapper {
+  display: inline-flex;
+}
+
+.select-field {
+  cursor: pointer;
+  padding-right: 28px;
+}
+
+.clear-filters-btn {
+  font-size: 11px;
+  padding: 8px 12px;
+  height: 42px;
+}
+
+.pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 4px 0;
+  border-top: 1px solid var(--line);
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--muted);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pagination-btn {
+  padding: 6px 12px;
+  font-size: 11px;
+  gap: 4px;
+}
+
 .copilot-stack {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
