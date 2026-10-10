@@ -1,4 +1,4 @@
-scripts/
+/scripts/
 prototipo/
 
 node_modules/
@@ -7,3 +7,13 @@ dist/
 vite.config.js
 vite.config.d.ts
 .env
+
+# Python / backend
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
