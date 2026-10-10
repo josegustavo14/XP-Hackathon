@@ -8,10 +8,12 @@
   já funciona nos dois modos. Evite cores hex soltas nos componentes.
 */
 @theme {
-  --color-navy: #151a22;
+  --font-sans: "Plus Jakarta Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+
+  --color-navy: #151515;
   --color-gold: #e8b44b;
   --color-surface: #ffffff;
-  --color-primary: #151a22;
+  --color-primary: #151515;
   --color-on-primary: #ffffff;
   /* Destaque (ícone dourado) sobre bg-primary. */
   --color-primary-accent: #e8b44b;
@@ -21,34 +23,58 @@
   --color-chart-2: #c48a1c;
   --color-chart-3: #1a805a;
   --color-chart-4: #8a63b8;
+
+  /* Neutros quentes (off-white e grafite): 50 = fundo da página, 900 = texto. */
+  --color-slate-50: #ecebe6;
+  --color-slate-100: #f3f2ee;
+  --color-slate-200: #e3e1db;
+  --color-slate-300: #cfcdc6;
+  --color-slate-400: #8f8e93;
+  --color-slate-500: #66656a;
+  --color-slate-600: #4f4e53;
+  --color-slate-700: #38373b;
+  --color-slate-800: #252428;
+  --color-slate-900: #151515;
+}
+
+/*
+  Fundo de fibras (Ghost Fibers). Fica fora do @theme porque nenhuma classe
+  usa essas variáveis e o Tailwind descartaria as que estivessem lá.
+*/
+:root {
+  --color-fiber-glow: #e3b04a;
+  --color-fiber-line: #a8761a;
 }
 
 .dark {
   color-scheme: dark;
 
-  --color-navy: #0a0d12;
-  --color-surface: #161b24;
-  --color-primary: #e8ecf2;
-  --color-on-primary: #151a22;
+  --color-navy: #0b0b0c;
+  --color-gold: #f0c25a;
+  --color-surface: #161618;
+  --color-primary: #f4f4f5;
+  --color-on-primary: #141414;
   --color-primary-accent: #9a6b0c;
+  --color-fiber-glow: #e8b44b;
+  --color-fiber-line: #f7e2b0;
 
-  /* Validada no fundo #161b24. */
+  /* Validada no fundo escuro dos cards. */
   --color-chart-1: #5b8def;
   --color-chart-2: #bd8a28;
   --color-chart-3: #1f9a80;
   --color-chart-4: #9472cc;
 
   /* Escala neutra invertida: 50 = fundo da página, 900 = texto principal. */
-  --color-slate-50: #0e1218;
-  --color-slate-100: #1c222c;
-  --color-slate-200: #2a313d;
-  --color-slate-300: #3a4250;
-  --color-slate-400: #7d8796;
-  --color-slate-500: #98a2b1;
-  --color-slate-600: #b4bcc8;
-  --color-slate-700: #cfd5de;
-  --color-slate-800: #e2e7ee;
-  --color-slate-900: #f1f4f8;
+  --color-slate-50: #0b0b0c;
+  --color-slate-100: #212124;
+  --color-slate-200: #2a2a2e;
+  --color-slate-300: #3a3a3f;
+  --color-slate-400: #77767d;
+  --color-slate-500: #8e8d94;
+  --color-slate-600: #b0afb5;
+  --color-slate-700: #cfcfd3;
+  --color-slate-800: #e4e4e7;
+  --color-slate-900: #f4f4f5;
 
   /* Tons de destaque: fundos escurecidos, textos clareados. */
   --color-amber-50: #2a2111;
@@ -82,11 +108,27 @@ body {
   margin: 0;
   background: var(--color-slate-50);
   color: var(--color-slate-900);
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  font-family: var(--font-sans);
+  /* A ligadura "fi" da Plus Jakarta Sans some em alguns navegadores ("Briefngs"). */
+  font-variant-ligatures: no-common-ligatures;
   font-size: 14px;
   transition: background-color 0.25s ease;
 }
 
 button {
   cursor: pointer;
+}
+
+/* Onda do copiloto. */
+@keyframes copilot-wave {
+  50% { transform: scaleY(0.35); }
+}
+.copilot-wave i {
+  width: 3px;
+  border-radius: 3px;
+  background: var(--color-gold);
+  animation: copilot-wave 1.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .copilot-wave i { animation: none; }
 }

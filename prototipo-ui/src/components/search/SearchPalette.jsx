@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Bell, CornerDownLeft, FileText, LayoutDashboard, Search, Sparkles, User } from "lucide-react";
-import { useStore } from "./store.js";
-import { Badge, severityTone } from "./ui.jsx";
-import { clientById, clients, money } from "./data.js";
+import { useStore } from "../../lib/store.js";
+import { Badge, severityTone } from "../ui";
+import { clientById, clients, money } from "../../data/mock.js";
 
 // Busca global: clientes, alertas e telas, com atalho para perguntar ao copiloto.
 // Abre pelo campo do header ou por Ctrl/⌘ + K.

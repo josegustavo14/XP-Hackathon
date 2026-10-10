@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, FileSearch, Sparkles } from "lucide-react";
-import { useStore } from "./store.js";
+import { useStore } from "../../lib/store.js";
 
 // Fontes consultadas e atalhos que acompanham cada resposta do copiloto.
 function AnswerExtras({ sources = [], actions = [], compact }) {
@@ -72,12 +72,24 @@ export function ChatThread({ chat, typing, compact = false, empty }) {
   );
 }
 
+// Onda animada do copiloto (identidade visual do assistente).
+export function CopilotWave({ size = "h-9" }) {
+  const bars = [10, 18, 26, 34, 22, 30, 16, 28, 20, 12];
+  return (
+    <div className={`copilot-wave flex items-center justify-center gap-[3px] ${size}`} aria-hidden>
+      {bars.map((h, i) => (
+        <i key={i} style={{ height: h, animationDelay: `${i * 0.08}s` }} />
+      ))}
+    </div>
+  );
+}
+
 export function CopilotMark({ size = "h-12 w-12", icon = "h-5 w-5", animated = true }) {
   return (
     <motion.div
       animate={animated ? { rotate: [0, 15, -10, 0], scale: [1, 1.12, 1] } : undefined}
       transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 1.5 }}
-      className={`grid ${size} place-items-center rounded-2xl bg-navy text-gold`}
+      className={`grid ${size} place-items-center rounded-full bg-primary text-primary-accent`}
     >
       <Sparkles className={icon} />
     </motion.div>

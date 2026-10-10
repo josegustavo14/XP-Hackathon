@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Maximize2, Send, Sparkles, X } from "lucide-react";
-import { useStore } from "./store.js";
-import { Badge } from "./ui.jsx";
-import { ChatThread, CopilotMark } from "./chat.jsx";
-import { suggestionsFor } from "./copilot.js";
+import { useStore } from "../../lib/store.js";
+import { Badge } from "../ui";
+import { ChatThread, CopilotMark, CopilotWave } from "./ChatThread.jsx";
+import { suggestionsFor } from "../../lib/copilot.js";
 
 // Botão flutuante no canto inferior direito que abre um chat rápido com o copiloto
 // sem sair da tela atual. A conversa é a mesma da página "Copiloto IA".
@@ -42,7 +42,7 @@ export default function CopilotWidget() {
             exit={{ opacity: 0, y: 16, scale: 0.96, transition: { duration: 0.15 } }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
             style={{ transformOrigin: "bottom right" }}
-            className="fixed inset-x-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 flex h-[min(560px,calc(100dvh-10rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-surface shadow-2xl shadow-black/20 sm:inset-x-auto sm:right-6 sm:w-[380px] md:bottom-24"
+            className="fixed inset-x-3 bottom-[calc(9.5rem+env(safe-area-inset-bottom))] z-40 flex h-[min(560px,calc(100dvh-14.5rem))] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-surface shadow-2xl shadow-black/20 sm:inset-x-auto sm:right-6 sm:w-[380px] lg:bottom-24 lg:h-[min(560px,calc(100dvh-8rem))]"
           >
             <header className="flex items-center gap-3 border-b border-slate-200 px-4 py-3">
               <CopilotMark size="h-9 w-9" icon="h-4 w-4" animated={false} />
@@ -72,8 +72,9 @@ export default function CopilotWidget() {
               typing={typing}
               empty={
                 <div className="pt-4">
-                  <p className="text-sm font-semibold text-slate-900">Como posso ajudar?</p>
-                  <p className="mb-4 mt-1 text-xs text-slate-500">{context ? `Sugestões sobre ${context}, ou escreva a sua pergunta.` : "Escolha uma pergunta ou escreva a sua."}</p>
+                  <CopilotWave size="mb-3 h-8" />
+                  <p className="text-center text-sm font-semibold text-slate-900">Como posso ajudar?</p>
+                  <p className="mb-4 mt-1 text-center text-xs text-slate-500">{context ? `Sugestões sobre ${context}, ou escreva a sua pergunta.` : "Escolha uma pergunta ou escreva a sua."}</p>
                   <div className="grid gap-2">
                     {suggestions.map((q, i) => (
                       <motion.button
@@ -117,7 +118,7 @@ export default function CopilotWidget() {
         )}
       </AnimatePresence>
 
-      <div className="fixed bottom-6 right-6 z-40 hidden items-center gap-3 md:flex">
+      <div className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-40 flex items-center gap-3 lg:bottom-6 lg:right-6">
         <AnimatePresence>
           {hover && !open && (
             <motion.span

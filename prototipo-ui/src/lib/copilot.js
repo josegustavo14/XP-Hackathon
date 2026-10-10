@@ -1,10 +1,10 @@
-import { clientById, clients, defaultAlerts, defaultNotes, money } from "./data.js";
+import { clientById, clients, defaultAlerts, defaultNotes, money } from "../data/mock.js";
+import { bySeverity } from "./alerts.js";
 
 // Respostas do copiloto por regras locais, calculadas sobre o estado atual
 // (alertas e anotações). Cada resposta traz o texto, as fontes consultadas e
 // atalhos de ação no formato [rótulo, página, parâmetro].
 
-const SEVERITY_RANK = { Alta: 0, "Média": 1, Baixa: 2 };
 const POSITIONS = "Posições simuladas · 09/10/2026";
 
 const firstName = (c) => c.name.split(" ")[0];
@@ -17,7 +17,7 @@ function findClient(low) {
 
 export function copilotResponse(q, { alerts = defaultAlerts, notes = defaultNotes } = {}) {
   const low = norm(q);
-  const pending = alerts.filter((a) => a.status === "Pendente").sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity]);
+  const pending = alerts.filter((a) => a.status === "Pendente").sort(bySeverity);
   const alert = alerts.find((a) => low.includes(norm(a.title)));
   const client = findClient(low);
 

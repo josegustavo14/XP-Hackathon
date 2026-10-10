@@ -167,7 +167,7 @@ export function ColumnChart({ data, valueLabel = "Índice", height = 200 }) {
     <div ref={ref} className="mt-8 flex gap-2">
       <div className="relative w-7 shrink-0 text-right text-[11px] tabular-nums text-slate-500" style={{ height }}>
         {ticks.map((t) => (
-          <span key={t} className="absolute right-0 -translate-y-1/2" style={{ bottom: `${t}%` }}>
+          <span key={t} className="absolute right-0 translate-y-1/2" style={{ bottom: `${t}%` }}>
             {t}
           </span>
         ))}
@@ -178,15 +178,15 @@ export function ColumnChart({ data, valueLabel = "Índice", height = 200 }) {
             <div key={t} className={`absolute inset-x-0 border-t ${t === 0 ? "border-slate-300" : "border-dashed border-slate-100"}`} style={{ bottom: `${t}%` }} />
           ))}
           <motion.div
-            className="absolute inset-x-0 z-10 border-t-2 border-dashed border-gold"
+            className="absolute inset-x-0 z-10 border-t border-dashed border-slate-300"
             initial={{ opacity: 0, bottom: 0 }}
             animate={inView ? { opacity: 1, bottom: `${(avg / max) * 100}%` } : {}}
             transition={{ duration: 0.9, delay: 0.9, ease: EASE }}
           >
-            <span className="absolute -top-5 right-0 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">Média {avg}</span>
+            <span className="absolute -top-5 left-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">Média {avg}</span>
           </motion.div>
 
-          <div className="absolute inset-0 flex items-end gap-1.5 sm:gap-2">
+          <div className="absolute inset-0 flex items-end gap-1.5 sm:gap-3">
             <AnimatePresence initial={false}>
               {data.map((d, i) => {
                 const last = i === data.length - 1;
@@ -203,9 +203,25 @@ export function ColumnChart({ data, valueLabel = "Índice", height = 200 }) {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
+                    {last && hover === null && inView && (
+                      <motion.span
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.9 }}
+                        className="absolute left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full border border-gold bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-slate-900"
+                        style={{ bottom: `calc(${(d.value / max) * 100}% + 12px)` }}
+                      >
+                        {d.value}
+                      </motion.span>
+                    )}
                     <motion.div
-                      className="w-full rounded-t"
-                      style={{ backgroundColor: last ? "var(--color-chart-2)" : "var(--color-chart-1)" }}
+                      className="w-full rounded-[10px] sm:rounded-xl"
+                      style={{
+                        background: last
+                          ? "linear-gradient(to top, transparent, var(--color-gold) 45%)"
+                          : "linear-gradient(to top, transparent, var(--color-slate-200) 40%)",
+                        boxShadow: last ? "0 -10px 30px -12px var(--color-gold)" : "none",
+                      }}
                       initial={{ height: 0 }}
                       animate={{ height: inView ? `${(d.value / max) * 100}%` : 0, opacity: dim ? 0.35 : 1 }}
                       transition={{ height: { duration: 0.8, delay: i * 0.05, ease: EASE }, opacity: { duration: 0.15 } }}
@@ -227,10 +243,10 @@ export function ColumnChart({ data, valueLabel = "Índice", height = 200 }) {
             </AnimatePresence>
           </div>
         </div>
-        <div className="mt-2 flex gap-1.5 sm:gap-2">
+        <div className="mt-2 flex gap-1.5 sm:gap-3">
           {data.map((d, i) => (
-            <span key={d.month} className={`flex-1 truncate text-center text-[11px] ${hover === i ? "font-bold text-slate-700" : "text-slate-500"}`}>
-              {data.length > 8 && i % 2 === 1 && hover !== i ? "" : d.month.slice(0, 3)}
+            <span key={d.month} className={`flex-1 whitespace-nowrap text-center text-[11px] ${hover === i ? "font-bold text-slate-700" : "text-slate-500"}`}>
+              {data.length > 8 && (data.length - 1 - i) % 2 === 1 && hover !== i ? "" : d.month.slice(0, 3)}
             </span>
           ))}
         </div>

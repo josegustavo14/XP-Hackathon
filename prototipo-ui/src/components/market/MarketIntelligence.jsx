@@ -67,7 +67,7 @@ const isSafeUrl = (url) => /^https?:\/\//i.test(url || "");
 
 function PeriodTabs({ value, onChange, layoutId }) {
   return (
-    <div role="tablist" aria-label="Período das notícias" className="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-1">
+    <div role="tablist" aria-label="Período das notícias" className="inline-flex rounded-full border border-slate-200 bg-surface p-1">
       {PERIODS.map((p) => {
         const selected = value === p.id;
         return (
@@ -76,14 +76,14 @@ function PeriodTabs({ value, onChange, layoutId }) {
             role="tab"
             aria-selected={selected}
             onClick={() => onChange(p.id)}
-            className={`relative rounded-md px-3.5 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
+            className={`relative rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
               selected ? "text-on-primary" : "text-slate-500 hover:text-slate-800"
             }`}
           >
             {selected && (
               <motion.span
                 layoutId={layoutId}
-                className="absolute inset-0 rounded-md bg-primary shadow-sm"
+                className="absolute inset-0 rounded-full bg-primary shadow-sm"
                 transition={{ type: "spring", stiffness: 420, damping: 34 }}
               />
             )}
@@ -125,7 +125,7 @@ function NewsCard({ item, relatedCount, contextLabel }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -6, transition: { duration: 0.15 } }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="group flex min-w-0 flex-col rounded-xl border border-slate-200 bg-surface p-5 transition-shadow hover:border-slate-300 hover:shadow-md hover:shadow-slate-200/60"
+      className="group flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-surface p-5 transition-shadow hover:border-slate-300 hover:shadow-md hover:shadow-slate-200/60"
     >
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">{topic}</span>
