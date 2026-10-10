@@ -4,6 +4,7 @@ import { PageHeader } from '../shared/ui/PageHeader';
 import { Card } from '../shared/ui/Card';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { ClientsPage } from '../features/clients/ClientsPage';
+import { MarketIntelligence } from '../features/dashboard/components/MarketIntelligence';
 import '../styles.css';
 
 function FeaturePlaceholder({ kicker, title, description }: { kicker: string; title: string; description: string }) {
@@ -23,11 +24,14 @@ function FeaturePlaceholder({ kicker, title, description }: { kicker: string; ti
 function ClientDetailPlaceholder() {
   const { clientId } = useParams<{ clientId: string }>();
   return (
-    <FeaturePlaceholder
-      kicker="Perfil 360º"
-      title={`Cliente #${clientId}`}
-      description="Visualização consolidada do investidor, carteira e histórico de relacionamento."
-    />
+    <div>
+      <PageHeader
+        kicker="Perfil 360º"
+        title={`Cliente #${clientId}`}
+        lead="Visualização consolidada do investidor, carteira e histórico de relacionamento."
+      />
+      <MarketIntelligence clientId={clientId} />
+    </div>
   );
 }
 

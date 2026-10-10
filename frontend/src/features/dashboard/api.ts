@@ -90,6 +90,7 @@ const mockNewsDay: NewsResponse = {
       source_name: 'Banco Central / Valor Econômico',
       published_at: '2026-10-10T09:00:00-03:00',
       topic: 'Renda Fixa',
+      url: 'https://www.bcb.gov.br/',
     },
     {
       id: 'news-2',
@@ -98,6 +99,7 @@ const mockNewsDay: NewsResponse = {
       source_name: 'Reuters / InfoMoney',
       published_at: '2026-10-10T08:15:00-03:00',
       topic: 'Bolsa',
+      url: 'https://www.reuters.com/',
     },
     {
       id: 'news-3',
@@ -106,6 +108,7 @@ const mockNewsDay: NewsResponse = {
       source_name: 'Exame / Valor',
       published_at: '2026-10-10T07:30:00-03:00',
       topic: 'Crédito Privado',
+      url: 'https://exame.com/',
     },
   ],
 };
@@ -121,6 +124,7 @@ const mockNewsWeek: NewsResponse = {
       source_name: 'Banco Central / InfoMoney',
       published_at: '2026-10-09T11:00:00-03:00',
       topic: 'Renda Fixa',
+      url: 'https://www.bcb.gov.br/',
     },
     {
       id: 'news-5',
@@ -129,6 +133,7 @@ const mockNewsWeek: NewsResponse = {
       source_name: 'Reuters / Valor Econômico',
       published_at: '2026-10-08T15:00:00-03:00',
       topic: 'Internacional',
+      url: 'https://www.reuters.com/',
     },
     {
       id: 'news-6',
@@ -137,6 +142,7 @@ const mockNewsWeek: NewsResponse = {
       source_name: 'IBGE / Exame',
       published_at: '2026-10-07T10:00:00-03:00',
       topic: 'Macroeconomia',
+      url: 'https://www.ibge.gov.br/',
     },
   ],
 };
@@ -147,8 +153,14 @@ export const dashboardApi = {
       ? Promise.resolve(mockDashboard)
       : request<DashboardSummary>('/dashboard/summary'),
 
-  news: (period: 'day' | 'week' = 'day'): Promise<NewsResponse> =>
+  news: (period: 'day' | 'week' = 'day', clientId?: string): Promise<NewsResponse> =>
     env.useMocks
       ? Promise.resolve(period === 'day' ? mockNewsDay : mockNewsWeek)
-      : request<NewsResponse>(`/news?period=${period}`),
+      : request<NewsResponse>(buildNewsPath(period, clientId)),
+};
+
+export const buildNewsPath = (period: 'day' | 'week', clientId?: string): string => {
+  const query = new URLSearchParams({ period });
+  if (clientId) query.set('client_id', clientId);
+  return `/news?${query.toString()}`;
 };

@@ -18,6 +18,7 @@ export const ClientsPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [newsClientId, setNewsClientId] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -68,6 +69,7 @@ export const ClientsPage: React.FC = () => {
   };
 
   const isFiltered = Boolean(query.trim() || riskFilter !== 'Todos');
+  const selectedNewsClient = clients.find((client) => client.id === newsClientId);
 
   return (
     <div className="clients-page-container">
@@ -121,7 +123,24 @@ export const ClientsPage: React.FC = () => {
       </Card>
 
       <div className="section">
-        <MarketIntelligence />
+        <div className="news-client-context">
+          <label htmlFor="news-client">Contexto das notícias</label>
+          <select
+            id="news-client"
+            className="select-field news-client-select"
+            value={newsClientId}
+            onChange={(event) => setNewsClientId(event.target.value)}
+          >
+            <option value="">Todos os clientes da carteira</option>
+            {clients.map((client) => (
+              <option key={client.id} value={client.id}>
+                {client.name}
+              </option>
+            ))}
+          </select>
+          <p>Use um cliente da lista para consultar notícias relevantes ao seu contexto.</p>
+        </div>
+        <MarketIntelligence clientId={newsClientId || undefined} clientName={selectedNewsClient?.name} />
       </div>
     </div>
   );

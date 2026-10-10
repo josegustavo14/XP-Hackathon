@@ -2,7 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { dashboardApi } from '../api';
 import { Badge } from '../../../shared/ui/Badge';
 import { Card } from '../../../shared/ui/Card';
-import type { NewsItem } from '../../../shared/api/generated';
+import type { NewsItem, NewsResponse } from '../../../shared/api/generated';
+
+interface MarketIntelligenceProps {
+  clientId?: string;
+  clientName?: string;
+}
 
 const formatNewsDate = (dateString: string) => {
   const d = new Date(dateString);
@@ -15,22 +20,37 @@ const formatNewsDate = (dateString: string) => {
   });
 };
 
-export const MarketIntelligence: React.FC = () => {
+const formatUpdatedAt = (dateString?: string) => {
+  if (!dateString) return 'Atualização indisponível';
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return 'Atualização indisponível';
+  return `Atualizado às ${date.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })}`;
+};
+
+export const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({ clientId, clientName }) => {
   const [period, setPeriod] = useState<'day' | 'week'>('day');
   const [news, setNews] = useState<NewsItem[]>([]);
+  const [feed, setFeed] = useState<NewsResponse>();
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>();
 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
+    setError(undefined);
 
     dashboardApi
-      .news(period)
+      .news(period, clientId)
       .then((res) => {
-        if (isMounted) setNews(res.items || []);
+        if (!isMounted) return;
+        setFeed(res);
+        setNews(res.items || []);
       })
-      .catch((err) => {
-        console.warn('Erro ao carregar notícias:', err);
+      .catch(() => {
+        if (isMounted) setError('Não foi possível atualizar as notícias agora.');
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -39,20 +59,25 @@ export const MarketIntelligence: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [period]);
+  }, [period, clientId]);
 
   return (
     <Card className="news-panel">
       <div className="sectionhead">
         <div>
           <h2>Inteligência de mercado</h2>
-          <p>Resumo dos principais acontecimentos para apoiar o assessor (EP08)</p>
+          <p>
+            {clientName
+              ? `Notícias relevantes para ${clientName}`
+              : 'Resumo dos principais acontecimentos para apoiar o assessor'}
+          </p>
         </div>
         <div className="news-controls">
           <button
             type="button"
             className={`news-tab ${period === 'day' ? 'selected' : ''}`}
             onClick={() => setPeriod('day')}
+            aria-pressed={period === 'day'}
           >
             Hoje
           </button>
@@ -60,19 +85,27 @@ export const MarketIntelligence: React.FC = () => {
             type="button"
             className={`news-tab ${period === 'week' ? 'selected' : ''}`}
             onClick={() => setPeriod('week')}
+            aria-pressed={period === 'week'}
           >
             Semana
           </button>
         </div>
       </div>
 
-      <div className="news-meta">
-        Feed integrado de inteligência macroeconômica e ativos relevantes para o atendimento.
+      <div className="news-status" aria-live="polite">
+        <span className="news-status-dot" aria-hidden="true" />
+        {loading ? 'Atualizando feed…' : formatUpdatedAt(feed?.as_of)}
+        {clientName && <span className="news-context">Contexto do cliente ativo</span>}
       </div>
 
       {loading ? (
         <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--muted)' }}>
           Carregando inteligência de mercado...
+        </div>
+      ) : error ? (
+        <div className="news-empty" role="status">
+          <b>Feed temporariamente indisponível</b>
+          <p>{error}</p>
         </div>
       ) : news.length === 0 ? (
         <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--muted)' }}>
@@ -89,7 +122,7 @@ export const MarketIntelligence: React.FC = () => {
               <h3>{item.title}</h3>
               <p>{item.summary}</p>
               <div className="news-foot">
-                <span className="news-meta">{item.source_name}</span>
+                <span className="news-meta">Fonte: {item.source_name}</span>
                 {item.url && (
                   <a
                     href={item.url}
@@ -98,7 +131,7 @@ export const MarketIntelligence: React.FC = () => {
                     className="btn-link"
                     style={{ fontSize: 11 }}
                   >
-                    Ler fonte ↗
+                    Abrir fonte original ↗
                   </a>
                 )}
               </div>
@@ -108,7 +141,8 @@ export const MarketIntelligence: React.FC = () => {
       )}
 
       <p className="news-disclaimer">
-        Monitoramento informativo. O assessor deve verificar adequação ao suitability do cliente antes de qualquer orientação.
+        Conteúdo exclusivamente informativo. Verifique a fonte original e a adequação ao perfil do
+        cliente antes de qualquer orientação.
       </p>
     </Card>
   );
