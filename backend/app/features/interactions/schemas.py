@@ -1,11 +1,12 @@
 """Schemas Pydantic (request/response) da feature interactions (EP04)."""
 
 from datetime import date, datetime
+from decimal import Decimal
 from uuid import UUID
 
 from pydantic import Field
 
-from app.shared.enums import InteractionChannel
+from app.shared.enums import GoalStatus, InteractionChannel
 from app.shared.schemas import ApiModel
 
 
@@ -62,3 +63,39 @@ class InteractionSearchItem(ApiModel):
 
     interaction: InteractionRead
     score: float = Field(default=1.0, description="Pontuação de relevância da busca")
+
+
+class GoalCreate(ApiModel):
+    """Payload para cadastro de novo objetivo financeiro do cliente."""
+
+    title: str = Field(
+        ..., min_length=1, max_length=200, description="Nome ou descrição do objetivo"
+    )
+    target_amount: Decimal | None = Field(default=None, description="Valor alvo a ser acumulado")
+    target_date: date | None = Field(default=None, description="Data estimada para a conclusão")
+    notes: str | None = Field(default=None, description="Observações complementares")
+
+
+class GoalUpdate(ApiModel):
+    """Payload para atualização de objetivo existente."""
+
+    title: str | None = Field(default=None, max_length=200)
+    target_amount: Decimal | None = None
+    target_date: date | None = None
+    status: GoalStatus | None = None
+    notes: str | None = None
+
+
+class GoalRead(ApiModel):
+    """Ficha do objetivo financeiro cadastrado."""
+
+    id: UUID
+    client_id: UUID
+    advisor_id: UUID
+    title: str
+    target_amount: Decimal | None = None
+    target_date: date | None = None
+    status: GoalStatus
+    notes: str | None = None
+    created_at: datetime
+    updated_at: datetime

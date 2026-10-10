@@ -70,6 +70,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(
         interactions.router, prefix=f"{API_V1_PREFIX}/interactions", tags=["interactions"]
     )
+    app.include_router(
+        interactions.goals_router, prefix=f"{API_V1_PREFIX}/goals", tags=["goals"]
+    )
     app.include_router(briefings.router, prefix=f"{API_V1_PREFIX}/briefings", tags=["briefings"])
     app.include_router(copilot.router, prefix=f"{API_V1_PREFIX}/copilot", tags=["copilot"])
     app.include_router(news.router, prefix=f"{API_V1_PREFIX}/news", tags=["news"])

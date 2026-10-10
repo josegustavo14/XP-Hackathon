@@ -5,10 +5,14 @@ from uuid import UUID
 from app.features.interactions.repository import InteractionRepository
 from app.features.interactions.schemas import (
     ActionItemRead,
+    GoalCreate,
+    GoalRead,
+    GoalUpdate,
     InteractionCreate,
     InteractionRead,
     InteractionSearchItem,
 )
+from app.shared.enums import GoalStatus
 from app.shared.exceptions import NotFoundError
 from app.shared.schemas import Page, PageMeta
 
@@ -123,3 +127,56 @@ class InteractionService:
             search_items.append(InteractionSearchItem(interaction=read_item, score=score))
 
         return search_items
+
+    async def create_goal(
+        self,
+        advisor_id: UUID,
+        client_id: UUID,
+        payload: GoalCreate,
+    ) -> GoalRead:
+        """Cadastra um objetivo ou meta financeira para o cliente."""
+        goal = await self.repository.create_goal(advisor_id, client_id, payload)
+        return GoalRead.model_validate(goal)
+
+    async def list_goals(
+        self,
+        advisor_id: UUID,
+        client_id: UUID,
+        status: GoalStatus | None = None,
+    ) -> list[GoalRead]:
+        """Lista objetivos do cliente filtrando opcionalmente por status."""
+        goals = await self.repository.list_goals(advisor_id, client_id, status=status)
+        return [GoalRead.model_validate(g) for g in goals]
+
+    async def get_goal_by_id(
+        self,
+        goal_id: UUID,
+        advisor_id: UUID,
+    ) -> GoalRead:
+        """Obtém detalhes de um objetivo por ID."""
+        goal = await self.repository.get_goal_by_id(goal_id, advisor_id)
+        if not goal:
+            raise NotFoundError("Objetivo financeiro não encontrado.", code="GOAL_NOT_FOUND")
+        return GoalRead.model_validate(goal)
+
+    async def update_goal(
+        self,
+        goal_id: UUID,
+        advisor_id: UUID,
+        payload: GoalUpdate,
+    ) -> GoalRead:
+        """Atualiza dados ou status de um objetivo."""
+        goal = await self.repository.update_goal(goal_id, advisor_id, payload)
+        if not goal:
+            raise NotFoundError("Objetivo financeiro não encontrado.", code="GOAL_NOT_FOUND")
+        return GoalRead.model_validate(goal)
+
+    async def delete_goal(
+        self,
+        goal_id: UUID,
+        advisor_id: UUID,
+    ) -> None:
+        """Exclui um objetivo cadastrado."""
+        deleted = await self.repository.delete_goal(goal_id, advisor_id)
+        if not deleted:
+            raise NotFoundError("Objetivo financeiro não encontrado.", code="GOAL_NOT_FOUND")

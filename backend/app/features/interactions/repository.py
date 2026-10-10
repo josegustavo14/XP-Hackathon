@@ -6,8 +6,14 @@ from uuid import UUID
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.features.interactions.models import ActionItem, Interaction
-from app.features.interactions.schemas import ActionItemCreate, InteractionCreate
+from app.features.interactions.models import ActionItem, Goal, Interaction
+from app.features.interactions.schemas import (
+    ActionItemCreate,
+    GoalCreate,
+    GoalUpdate,
+    InteractionCreate,
+)
+from app.shared.enums import GoalStatus
 
 
 class InteractionRepository:
@@ -175,3 +181,92 @@ class InteractionRepository:
         await self.session.commit()
         await self.session.refresh(action)
         return action
+
+    async def create_goal(
+        self,
+        advisor_id: UUID,
+        client_id: UUID,
+        payload: GoalCreate,
+    ) -> Goal:
+        """Cadastra uma meta ou objetivo financeiro do cliente."""
+        goal = Goal(
+            advisor_id=advisor_id,
+            client_id=client_id,
+            title=payload.title,
+            target_amount=payload.target_amount,
+            target_date=payload.target_date,
+            status=GoalStatus.ACTIVE,
+            notes=payload.notes,
+        )
+        self.session.add(goal)
+        await self.session.commit()
+        await self.session.refresh(goal)
+        return goal
+
+    async def list_goals(
+        self,
+        advisor_id: UUID,
+        client_id: UUID,
+        status: GoalStatus | None = None,
+    ) -> list[Goal]:
+        """Lista os objetivos de um cliente vinculados ao assessor."""
+        stmt = (
+            select(Goal)
+            .where(Goal.advisor_id == advisor_id, Goal.client_id == client_id)
+            .order_by(Goal.created_at.desc())
+        )
+        if status is not None:
+            stmt = stmt.where(Goal.status == status)
+
+        res = await self.session.execute(stmt)
+        return list(res.scalars().all())
+
+    async def get_goal_by_id(
+        self,
+        goal_id: UUID,
+        advisor_id: UUID,
+    ) -> Goal | None:
+        """Busca um objetivo específico por ID com validação de assessor."""
+        stmt = select(Goal).where(Goal.id == goal_id, Goal.advisor_id == advisor_id)
+        res = await self.session.execute(stmt)
+        return res.scalar_one_or_none()
+
+    async def update_goal(
+        self,
+        goal_id: UUID,
+        advisor_id: UUID,
+        payload: GoalUpdate,
+    ) -> Goal | None:
+        """Atualiza campos de um objetivo existente."""
+        goal = await self.get_goal_by_id(goal_id, advisor_id)
+        if not goal:
+            return None
+
+        if payload.title is not None:
+            goal.title = payload.title
+        if payload.target_amount is not None:
+            goal.target_amount = payload.target_amount
+        if payload.target_date is not None:
+            goal.target_date = payload.target_date
+        if payload.status is not None:
+            goal.status = payload.status
+        if payload.notes is not None:
+            goal.notes = payload.notes
+
+        await self.session.commit()
+        await self.session.refresh(goal)
+        return goal
+
+    async def delete_goal(
+        self,
+        goal_id: UUID,
+        advisor_id: UUID,
+    ) -> bool:
+        """Remove um objetivo cadastrado."""
+        goal = await self.get_goal_by_id(goal_id, advisor_id)
+        if not goal:
+            return False
+
+        await self.session.delete(goal)
+        await self.session.commit()
+        return True
