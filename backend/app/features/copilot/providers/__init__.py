@@ -1,0 +1,1 @@
+"""Adapters para provedores externos de LLM."""
