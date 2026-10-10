@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -41,3 +42,14 @@ def get_auth_service(session: AdvisorSession) -> AuthService:
 
 
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
+
+
+async def require_client_access(
+    client_id: UUID, user: CurrentUser, service: AuthServiceDep
+) -> UUID:
+    """Dependency reutilizável para rotas que recebem `client_id` no path."""
+    await service.ensure_client_access(user.id, client_id)
+    return client_id
+
+
+AuthorizedClientId = Annotated[UUID, Depends(require_client_access)]

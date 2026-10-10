@@ -4006,6 +4006,11 @@ insert into news_articles (id, source, url, title, summary, published_at, ticker
   ('9f8a809e-cd21-5d6b-9fd1-00aee51edf21', 'sintetico', 'https://noticias.exemplo/sintetico/9f8a809e', '[Simulada] Previdência privada registra captação recorde no semestre', 'Planos PGBL e VGBL lideraram a entrada de recursos.', now() - interval '300 hours', '{}'::text[], '{}'::uuid[], '{"pension"}'::asset_class[], '{"previdência"}'::text[]),
   ('503730ac-ab9c-5ba9-a696-f0e6ac40351e', 'sintetico', 'https://noticias.exemplo/sintetico/503730ac', '[Simulada] Banco Vale do Sul expande operação no Centro-Oeste', 'Banco abrirá 12 agências focadas no agronegócio.', now() - interval '400 hours', '{}'::text[], '{"2f0722ee-4c01-5da1-a15b-00214c03474d"}'::uuid[], '{}'::asset_class[], '{"crédito bancário"}'::text[]);
 
+-- Vínculo explícito de autorização: todo cliente sintético pertence ao assessor do seed.
+insert into advisor_clients (advisor_id, client_id)
+select advisor_id, id from clients
+on conflict (advisor_id, client_id) do nothing;
+
 -- Processamentos derivados
 select refresh_alerts();
 select match_news_to_clients();
