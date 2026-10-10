@@ -8,8 +8,13 @@ from app.features.auth.dependencies import CurrentUser
 from app.features.clients.dependencies import ClientServiceDep
 from app.features.clients.schemas import ClientDetail, ClientListItem, DashboardSummary
 from app.features.interactions.dependencies import InteractionServiceDep
-from app.features.interactions.schemas import InteractionCreate, InteractionRead
-from app.shared.enums import RiskProfile
+from app.features.interactions.schemas import (
+    GoalCreate,
+    GoalRead,
+    InteractionCreate,
+    InteractionRead,
+)
+from app.shared.enums import GoalStatus, RiskProfile
 from app.shared.schemas import ERROR_RESPONSES, Page
 
 router = APIRouter(responses=ERROR_RESPONSES)
@@ -96,6 +101,45 @@ async def create_client_interaction(
     """Registra uma interação com o cliente garantindo client_id consistente."""
     payload.client_id = client_id
     return await interactions_service.create_interaction(advisor_id=user.id, payload=payload)
+
+
+@router.get(
+    "/{client_id}/goals",
+    response_model=list[GoalRead],
+    summary="Listar objetivos financeiros do cliente",
+)
+async def list_client_goals(
+    client_id: UUID,
+    interactions_service: InteractionServiceDep,
+    user: CurrentUser,
+    status: GoalStatus | None = Query(None, description="Filtro opcional por status"),
+) -> list[GoalRead]:
+    """Retorna os objetivos e metas cadastrados para o cliente."""
+    return await interactions_service.list_goals(
+        advisor_id=user.id,
+        client_id=client_id,
+        status=status,
+    )
+
+
+@router.post(
+    "/{client_id}/goals",
+    response_model=GoalRead,
+    status_code=201,
+    summary="Cadastrar objetivo financeiro para o cliente",
+)
+async def create_client_goal(
+    client_id: UUID,
+    payload: GoalCreate,
+    interactions_service: InteractionServiceDep,
+    user: CurrentUser,
+) -> GoalRead:
+    """Cadastra um novo objetivo financeiro para o cliente."""
+    return await interactions_service.create_goal(
+        advisor_id=user.id,
+        client_id=client_id,
+        payload=payload,
+    )
 
 
 @dashboard_router.get(

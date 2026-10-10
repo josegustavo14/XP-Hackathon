@@ -10,6 +10,8 @@ from fastapi import APIRouter, Query, status
 from app.features.auth.dependencies import CurrentUser
 from app.features.interactions.dependencies import InteractionServiceDep
 from app.features.interactions.schemas import (
+    GoalRead,
+    GoalUpdate,
     InteractionCreate,
     InteractionRead,
     InteractionSearchItem,
@@ -86,3 +88,49 @@ async def get_interaction_by_id(
 ) -> InteractionRead:
     """Retorna ficha completa de um atendimento com pendências associadas."""
     return await service.get_interaction_by_id(interaction_id=interaction_id, advisor_id=user.id)
+
+
+goals_router = APIRouter(responses=ERROR_RESPONSES)
+
+
+@goals_router.get(
+    "/{goal_id}",
+    response_model=GoalRead,
+    summary="Consultar objetivo por ID",
+)
+async def get_goal_by_id(
+    goal_id: UUID,
+    service: InteractionServiceDep,
+    user: CurrentUser,
+) -> GoalRead:
+    """Retorna detalhes de um objetivo financeiro cadastrado."""
+    return await service.get_goal_by_id(goal_id=goal_id, advisor_id=user.id)
+
+
+@goals_router.patch(
+    "/{goal_id}",
+    response_model=GoalRead,
+    summary="Atualizar objetivo financeiro",
+)
+async def update_goal(
+    goal_id: UUID,
+    payload: GoalUpdate,
+    service: InteractionServiceDep,
+    user: CurrentUser,
+) -> GoalRead:
+    """Atualiza título, valor, prazo ou status do objetivo (active, achieved, cancelled)."""
+    return await service.update_goal(goal_id=goal_id, advisor_id=user.id, payload=payload)
+
+
+@goals_router.delete(
+    "/{goal_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remover objetivo financeiro",
+)
+async def delete_goal(
+    goal_id: UUID,
+    service: InteractionServiceDep,
+    user: CurrentUser,
+) -> None:
+    """Exclui o objetivo especificado."""
+    await service.delete_goal(goal_id=goal_id, advisor_id=user.id)
