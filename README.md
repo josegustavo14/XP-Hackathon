@@ -11,7 +11,19 @@ cp .env.example .env
 npm run dev
 ```
 
-O `.env` usa `VITE_USE_MOCKS=true` por padrão. Para apontar para o backend, defina `VITE_USE_MOCKS=false` e ajuste `VITE_API_BASE_URL`.
+## Alternar entre mock, API local e API remota
+
+Os componentes chamam somente APIs por feature. A seleção acontece por ambiente, sem alterar as telas:
+
+| Cenário | Arquivo | Comando |
+| --- | --- | --- |
+| Mocks | `.env` com `VITE_API_MODE=mock` | `npm run dev` |
+| FastAPI local | copie `.env.local.example` para `.env.local` | `npm run dev` |
+| API remota | copie `.env.remote.example` para `.env.remote.local` | `npm run dev:remote` |
+
+Para usar uma API protegida, preencha `VITE_API_ACCESS_TOKEN` no arquivo local do ambiente. Obtenha-o com `POST /api/v1/auth/login`; não envie tokens, URLs privadas, chaves do Supabase ou segredos no Git. Quando você tiver a URL pública do backend e um token de demonstração, envie apenas onde cada valor deve ser colocado e eu confirmo a configuração.
+
+O backend atual ainda não expõe `/dashboard/summary` ou endpoints de clientes. Quando essas features forem publicadas, o dashboard passa a consumi-las automaticamente nos modos `local` e `remote`; até lá, mantenha `VITE_API_MODE=mock` para a tela funcional.
 
 As chamadas passam pelos módulos de cada feature (`src/features/*/api.ts`) e usam o cliente HTTP compartilhado. Componentes de tela não conhecem URLs. Os tipos em `src/shared/api/generated.ts` são o ponto de consumo do contrato OpenAPI e podem ser substituídos pelo arquivo gerado quando o schema for versionado.
 
