@@ -4,8 +4,8 @@ Frontend React + TypeScript e backend FastAPI preparados para desenvolvimento co
 
 ## Demonstração local completa
 
-O modo demonstrativo sobe o FastAPI com dados sintéticos em memória. Não requer
-Postgres, Supabase, Open Finance ou chave de LLM.
+O modo demonstrativo sobe o FastAPI com dados sintéticos persistidos em um PostgreSQL
+local. Não requer Supabase, Open Finance ou chave de LLM.
 
 Em um terminal, na raiz do repositório:
 
@@ -29,6 +29,15 @@ O Compose cria um PostgreSQL local na porta `54322`, aplica
 `database/demo_seed.sql` em um volume novo e mantém interações criadas pela
 interface nesse banco. Para reiniciar os dados sintéticos, execute
 `docker compose -f compose.demo.yml down -v` e suba novamente.
+
+Em **Registrar Interação**, é possível escrever um resumo, anexar uma ata `.txt`/`.md`
+em UTF-8 ou `.pdf` com texto selecionável (sem senha, até 100 páginas), ou enviar áudio/vídeo `.mp3`, `.m4a`, `.wav`, `.ogg`, `.aac`, `.flac`, `.mp4`, `.mov` ou
+`.webm` (até 25 MB e 30 minutos para gravações). O backend transcreve a fala em
+português localmente com Whisper, salva o texto e o arquivo original no PostgreSQL
+e mostra ambos no histórico do cliente. O modelo é baixado durante a primeira
+construção da imagem Docker; a transcrição em CPU pode demorar alguns minutos.
+O resumo e a ata não são gerados automaticamente pela IA. O histórico ainda não
+alimenta o copiloto nem os briefings.
 
 ## Alternar entre mock, API local e API remota
 

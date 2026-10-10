@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { clientsApi, normalizeRiskProfile, normalizeRiskProfileToContract } from './api';
+import { env } from '../../shared/config/env';
 
 describe('clientsApi', () => {
   it('lists mock clients when no filters are provided', async () => {
@@ -82,22 +83,67 @@ describe('clientsApi', () => {
   });
 
   it('fetches interactions and allows creating a new interaction', async () => {
-    const initialInteractions = await clientsApi.getInteractions('11111111-1111-4111-8111-111111111111');
-    const initialCount = initialInteractions.length;
+    const originalMode = env.mode;
+    env.mode = 'local';
+    const items: Array<Record<string, unknown>> = [];
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.endsWith('/auth/login')) return Response.json({ access_token: 'test-token' });
+      if (url.endsWith('/interactions') && init?.method === 'POST') {
+        const created = { id: 'int-test', client_id: '11111111-1111-4111-8111-111111111111', ...JSON.parse(String(init.body)) };
+        items.unshift(created);
+        return Response.json(created);
+      }
+      if (url.endsWith('/interactions')) return Response.json({ items });
+      throw new Error(`URL inesperada: ${url}`);
+    }));
+    try {
+      const clientId = '11111111-1111-4111-8111-111111111111';
+      expect(await clientsApi.getInteractions(clientId)).toEqual([]);
+      const created = await clientsApi.createInteraction(clientId, {
+        channel: 'meeting',
+        summary: 'Reunião de alinhamento com nova alocação',
+        next_step: 'Enviar proposta formal',
+      });
+      expect(created.id).toBe('int-test');
+      expect(created.summary).toBe('Reunião de alinhamento com nova alocação');
+      expect((await clientsApi.getInteractions(clientId))[0].id).toBe(created.id);
+    } finally {
+      env.mode = originalMode;
+      vi.unstubAllGlobals();
+    }
+  });
 
-    const created = await clientsApi.createInteraction('11111111-1111-4111-8111-111111111111', {
-      channel: 'meeting',
-      summary: 'Reunião de alinhamento com nova alocação',
-      next_step: 'Enviar proposta formal',
+  it('sends a meeting attachment as multipart data with authorization', async () => {
+    const originalMode = env.mode;
+    env.mode = 'local';
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).endsWith('/auth/login')) return Response.json({ access_token: 'test-token' });
+      expect(String(input)).toContain('/interactions/upload');
+      expect(init?.headers).toMatchObject({ Authorization: 'Bearer test-token' });
+      expect((init?.headers as Record<string, string>)['Content-Type']).toBeUndefined();
+      expect(init?.body).toBeInstanceOf(FormData);
+      const form = init?.body as FormData;
+      expect(form.get('channel')).toBe('meeting');
+      expect(form.get('file')).toBeInstanceOf(File);
+      return Response.json({
+        id: 'int-upload', client_id: '11111111-1111-4111-8111-111111111111',
+        channel: 'meeting', summary: 'Ata', transcription: 'Texto da ata',
+        attachment_name: 'ata.txt', attachment_type: 'minutes',
+      });
     });
-
-    expect(created.id).toBeDefined();
-    expect(created.summary).toBe('Reunião de alinhamento com nova alocação');
-    expect(created.channel).toBe('meeting');
-
-    const updatedInteractions = await clientsApi.getInteractions('11111111-1111-4111-8111-111111111111');
-    expect(updatedInteractions.length).toBe(initialCount + 1);
-    expect(updatedInteractions[0].summary).toBe('Reunião de alinhamento com nova alocação');
+    vi.stubGlobal('fetch', fetchMock);
+    try {
+      const result = await clientsApi.uploadInteraction(
+        '11111111-1111-4111-8111-111111111111',
+        { channel: 'meeting', summary: 'Ata' },
+        new File(['Texto da ata'], 'ata.txt', { type: 'text/plain' }),
+      );
+      expect(result.transcription).toBe('Texto da ata');
+    } finally {
+      env.mode = originalMode;
+      vi.unstubAllGlobals();
+    }
   });
 });
 

@@ -90,11 +90,14 @@ export interface ClientGoalItem {
 export interface ClientInteractionItem {
   id: string;
   client_id: string;
-  channel: 'meeting' | 'phone' | 'whatsapp' | 'email' | 'note';
+  channel: 'meeting' | 'call' | 'phone' | 'whatsapp' | 'email' | 'note';
   occurred_at: string;
   summary: string;
   next_step?: string | null;
   advisor_name?: string;
+  attachment_name?: string;
+  attachment_type?: 'minutes' | 'transcription';
+  transcription?: string;
 }
 
 export interface ClientAlertItem {
@@ -108,7 +111,7 @@ export interface ClientAlertItem {
 }
 
 export interface CreateInteractionPayload {
-  channel: 'meeting' | 'phone' | 'whatsapp' | 'email' | 'note';
+  channel: 'meeting' | 'call' | 'whatsapp' | 'email' | 'note';
   summary: string;
   next_step?: string;
   occurred_at?: string;

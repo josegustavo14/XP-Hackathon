@@ -5,7 +5,7 @@ import type { CreateInteractionPayload } from '../types';
 interface NewInteractionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (payload: CreateInteractionPayload) => Promise<void>;
+  onSave: (payload: CreateInteractionPayload, file?: File) => Promise<void>;
   clientName: string;
 }
 
@@ -18,27 +18,31 @@ export const NewInteractionModal: React.FC<NewInteractionModalProps> = ({
   const [channel, setChannel] = useState<CreateInteractionPayload['channel']>('meeting');
   const [summary, setSummary] = useState('');
   const [nextStep, setNextStep] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!summary.trim()) return;
+    if (!summary.trim() && !file) return;
 
     try {
       setIsSubmitting(true);
+      setError(null);
       await onSave({
         channel,
         summary: summary.trim(),
         next_step: nextStep.trim() || undefined,
         occurred_at: new Date().toISOString(),
-      });
+      }, file ?? undefined);
       setSummary('');
       setNextStep('');
+      setFile(null);
       onClose();
     } catch (err) {
-      console.error('Erro ao salvar interação:', err);
+      setError(err instanceof Error ? err.message : 'Não foi possível salvar a interação.');
     } finally {
       setIsSubmitting(false);
     }
@@ -71,7 +75,7 @@ export const NewInteractionModal: React.FC<NewInteractionModalProps> = ({
                 }
               >
                 <option value="meeting">Reunião (Presencial / Vídeo)</option>
-                <option value="phone">Ligação Telefônica</option>
+                <option value="call">Ligação Telefônica</option>
                 <option value="whatsapp">WhatsApp / Mensagem</option>
                 <option value="email">E-mail</option>
                 <option value="note">Anotação Interna do Assessor</option>
@@ -86,8 +90,20 @@ export const NewInteractionModal: React.FC<NewInteractionModalProps> = ({
                 placeholder="Descreva as demandas levantadas, perfil de interesse, dúvidas do cliente ou alinhamento patrimonial..."
                 value={summary}
                 onChange={(e) => setSummary(e.target.value)}
-                required
+                required={!file}
               />
+            </div>
+
+            <div className="form-group mb-3">
+              <label className="form-label" htmlFor="interaction-file">Ata em texto/PDF, áudio ou vídeo da reunião</label>
+              <input
+                id="interaction-file"
+                className="field w-full"
+                type="file"
+                accept=".txt,.md,.pdf,.mp3,.m4a,.wav,.ogg,.aac,.flac,.mp4,.mov,.webm,text/plain,text/markdown,application/pdf,audio/*,video/*"
+                onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+              />
+              <p className="text-xs text-muted">Até 25 MB. PDF deve conter texto selecionável. Áudio e vídeo serão transcritos em português.</p>
             </div>
 
             <div className="form-group">
@@ -100,6 +116,7 @@ export const NewInteractionModal: React.FC<NewInteractionModalProps> = ({
                 onChange={(e) => setNextStep(e.target.value)}
               />
             </div>
+            {error && <p role="alert" className="interaction-upload-error">{error}</p>}
           </div>
 
           <div className="modal-footer">
@@ -109,9 +126,9 @@ export const NewInteractionModal: React.FC<NewInteractionModalProps> = ({
             <Button
               type="submit"
               variant="primary"
-              disabled={isSubmitting || !summary.trim()}
+              disabled={isSubmitting || (!summary.trim() && !file)}
             >
-              {isSubmitting ? 'Salvando...' : 'Salvar Registro'}
+              {isSubmitting ? (file ? 'Enviando e transcrevendo...' : 'Salvando...') : 'Salvar Registro'}
             </Button>
           </div>
         </form>

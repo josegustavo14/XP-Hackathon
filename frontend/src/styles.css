@@ -546,6 +546,11 @@ tr:hover td {
 .demo-source-card { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .demo-settings-card > div { flex: 1; }
 
+.timeline-transcription { margin: 12px 0; padding: 12px; border-radius: var(--radius-sm); background: #f6f7f9; }
+.timeline-transcription p { margin: 8px 0; white-space: pre-wrap; overflow-wrap: anywhere; color: #3a4350; }
+.timeline-transcription .btn { padding-left: 0; }
+.interaction-upload-error { color: var(--red); margin: 8px 0 0; }
+
 /* -------------------------------------------------------------------------- */
 /* Responsive                                                                 */
 /* -------------------------------------------------------------------------- */

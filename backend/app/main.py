@@ -5,9 +5,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from app.core.config import API_V1_PREFIX, Settings, get_settings
-from app.core.database import dispose_engine
+from app.core.database import dispose_engine, get_engine
 from app.core.errors import register_exception_handlers
 from app.core.middleware import TRACE_ID_HEADER, TraceIdMiddleware
 from app.features.alerts import router as alerts
@@ -24,6 +25,14 @@ from app.features.portfolios import router as portfolios
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    if get_settings().auth_mode == "mock":
+        # Também atualiza volumes de demonstração criados antes da feature de anexos.
+        async with get_engine().begin() as connection:
+            await connection.execute(text(
+                "create table if not exists demo_attachments ("
+                "interaction_id uuid primary key references demo_interactions(id) on delete cascade, "
+                "filename text not null, content_type text not null, contents bytea not null)"
+            ))
     yield
     await dispose_engine()
 

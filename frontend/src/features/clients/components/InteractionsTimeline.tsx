@@ -4,6 +4,7 @@ import { Card } from '../../../shared/ui/Card';
 import { Badge } from '../../../shared/ui/Badge';
 import { Button } from '../../../shared/ui/Button';
 import type { ClientInteractionItem } from '../types';
+import { clientsApi } from '../api';
 
 interface InteractionsTimelineProps {
   interactions: ClientInteractionItem[];
@@ -19,6 +20,7 @@ const getChannelMeta = (channel: string) => {
         badge: <Badge variant="gold">Reunião</Badge>,
       };
     case 'phone':
+    case 'call':
       return {
         label: 'Ligação',
         icon: <Phone size={14} className="icon-blue" />,
@@ -50,6 +52,20 @@ export const InteractionsTimeline: React.FC<InteractionsTimelineProps> = ({
   interactions,
   onOpenNewModal,
 }) => {
+  const downloadAttachment = async (item: ClientInteractionItem) => {
+    if (!item.attachment_name) return;
+    try {
+      const blob = await clientsApi.downloadInteractionAttachment(item.client_id, item.id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = item.attachment_name;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'Não foi possível baixar o anexo.');
+    }
+  };
   return (
     <div className="timeline-tab-content">
       <div className="split">
@@ -114,6 +130,18 @@ export const InteractionsTimeline: React.FC<InteractionsTimelineProps> = ({
 
                       <p className="timeline-summary">{item.summary}</p>
 
+                      {item.transcription && (
+                        <div className="timeline-transcription">
+                          <strong>{item.attachment_type === 'minutes' ? 'Ata anexada' : 'Transcrição da gravação'}</strong>
+                          <p>{item.transcription}</p>
+                          {item.attachment_name && (
+                            <Button variant="link" onClick={() => void downloadAttachment(item)}>
+                              <FileText size={13} /> Baixar {item.attachment_name}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+
                       {item.next_step && (
                         <div className="timeline-next-step">
                           <CheckCircle2 size={13} className="icon-gold shrink-0" />
@@ -142,8 +170,8 @@ export const InteractionsTimeline: React.FC<InteractionsTimelineProps> = ({
           <div className="memory-guide-box">
             <h4>Como a Memória é Utilizada</h4>
             <p>
-              Todos os registros adicionados aqui são utilizados pelo <b>Copiloto IA</b> e na geração de{' '}
-              <b>Briefings</b> automáticos para que você nunca perca o contexto histórico das decisões do investidor.
+                Os registros ficam no histórico deste cliente. A integração deles com o <b>Copiloto IA</b> e os{' '}
+                <b>Briefings</b> ainda está em desenvolvimento.
             </p>
 
             <div className="guideline-item">

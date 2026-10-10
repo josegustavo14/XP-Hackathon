@@ -67,9 +67,11 @@ export const ClientProfilePage: React.FC = () => {
     loadClientData();
   }, [loadClientData]);
 
-  const handleSaveInteraction = async (payload: CreateInteractionPayload) => {
+  const handleSaveInteraction = async (payload: CreateInteractionPayload, file?: File) => {
     if (!clientId) return;
-    const newInt = await clientsApi.createInteraction(clientId, payload);
+    const newInt = file
+      ? await clientsApi.uploadInteraction(clientId, payload, file)
+      : await clientsApi.createInteraction(clientId, payload);
     setInteractions((prev) => [newInt, ...prev]);
   };
 

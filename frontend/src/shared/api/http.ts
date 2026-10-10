@@ -42,7 +42,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function fetchAuthorized(path: string, init?: RequestInit): Promise<Response> {
   if (!env.apiBaseUrl) {
     throw new ApiConfigurationError(
       'Defina VITE_API_REMOTE_BASE_URL para usar a API remota.',
@@ -54,7 +54,7 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: {
       Accept: 'application/json',
-      'Content-Type': 'application/json',
+      ...(init?.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...init?.headers,
     },
@@ -78,6 +78,16 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw error;
   }
 
+  return response;
+}
+
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetchAuthorized(path, init);
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
+}
+
+export async function requestBlob(path: string): Promise<Blob> {
+  const response = await fetchAuthorized(path);
+  return response.blob();
 }

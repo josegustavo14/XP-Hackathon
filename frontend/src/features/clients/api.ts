@@ -1,5 +1,5 @@
 import { env } from '../../shared/config/env';
-import { request } from '../../shared/api/http';
+import { request, requestBlob } from '../../shared/api/http';
 import type {
   ClientItem,
   ClientDetailData,
@@ -232,9 +232,10 @@ export const clientsApi = {
       try {
         const raw = await request<Record<string, unknown>>(`/clients/${clientId}/interactions`);
         const items = (raw.items as ClientInteractionItem[]) || [];
-        if (items.length > 0) return items;
+        return items;
       } catch (err) {
-        console.warn(`Fallback para mock de interações do cliente ${clientId}:`, err);
+        console.error(`Falha ao carregar o histórico do cliente ${clientId}:`, err);
+        throw err;
       }
     }
 
@@ -255,12 +256,11 @@ export const clientsApi = {
     };
 
     if (!useMocks) {
-      try {
-        const res = await request<Record<string, unknown>>(`/clients/${clientId}/interactions`, {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        });
-        return {
+      const res = await request<Record<string, unknown>>(`/clients/${clientId}/interactions`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      return {
           id: String(res.id ?? newInteraction.id),
           client_id: clientId,
           channel: (res.channel as ClientInteractionItem['channel']) || newInteraction.channel,
@@ -268,10 +268,7 @@ export const clientsApi = {
           summary: String(res.summary ?? newInteraction.summary),
           next_step: res.next_step ? String(res.next_step) : newInteraction.next_step,
           advisor_name: String(res.advisor_name ?? newInteraction.advisor_name),
-        };
-      } catch (err) {
-        console.warn('Erro ao persistir interação no backend, salvando em cache local:', err);
-      }
+      };
     }
 
     if (!MOCK_INTERACTIONS_MAP[clientId]) {
@@ -280,4 +277,20 @@ export const clientsApi = {
     MOCK_INTERACTIONS_MAP[clientId].unshift(newInteraction);
     return newInteraction;
   },
+
+  uploadInteraction: async (clientId: string, payload: CreateInteractionPayload, file: File): Promise<ClientInteractionItem> => {
+    if (env.mode === 'mock') throw new Error('Para transcrever anexos, inicie o backend local.');
+    const form = new FormData();
+    form.append('file', file);
+    form.append('channel', payload.channel);
+    form.append('summary', payload.summary);
+    form.append('next_step', payload.next_step ?? '');
+    return request<ClientInteractionItem>(`/clients/${clientId}/interactions/upload`, {
+      method: 'POST',
+      body: form,
+    });
+  },
+
+  downloadInteractionAttachment: (clientId: string, interactionId: string) =>
+    requestBlob(`/clients/${clientId}/interactions/${interactionId}/attachment`),
 };
