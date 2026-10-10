@@ -11,10 +11,14 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "latest",
+    "framer-motion": "^14.1.0",
+    "lucide-react": "^1.55.0",
     "react": "latest",
     "react-dom": "latest",
     "react-router-dom": "latest",
+    "tailwindcss": "^4.3.3",
     "vite": "latest"
   },
   "devDependencies": {

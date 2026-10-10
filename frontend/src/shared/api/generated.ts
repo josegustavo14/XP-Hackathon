@@ -1,4 +1,4 @@
-/** Tipos equivalentes aos contratos versionados em /contracts. */
+/** Tipos equivalentes aos contratos versionados em /contracts e OpenAPI. */
 export type RiskProfile = 'conservative' | 'moderate' | 'aggressive';
 export type AssetClass = 'cash' | 'fixed_income' | 'funds' | 'equities' | 'alternatives' | 'other';
 export type AlertType = 'concentration' | 'maturity' | 'idle_cash' | 'profile_review' | 'news_impact' | 'other';
@@ -23,11 +23,47 @@ export interface ClientSummary {
   attention_level: string;
 }
 
+export interface DashboardPriorityItem {
+  client: {
+    id: string;
+    name: string;
+    risk_profile: RiskProfile;
+    total_assets?: string;
+  };
+  reason_type: string;
+  reason_label: string;
+  severity: AlertPriority;
+  alert_id?: string | null;
+}
+
 export interface DashboardSummary {
-  client_count: number;
-  managed_assets: string;
+  /* Contrato da Issue #9 */
+  clients_total?: number;
+  clients_need_attention?: number;
   open_alerts: number;
-  priority_clients: ClientSummary[];
+  total_assets?: string;
+  priorities?: DashboardPriorityItem[];
+
+  /* Compatibilidade com mocks do contrato EP00 */
+  client_count?: number;
+  managed_assets?: string;
+  priority_clients?: ClientSummary[];
+}
+
+export interface NewsItem {
+  id: string;
+  title: string;
+  summary: string;
+  source_name: string;
+  published_at: string;
+  topic?: string;
+  url?: string | null;
+}
+
+export interface NewsResponse {
+  period: 'day' | 'week';
+  as_of?: string;
+  items: NewsItem[];
 }
 
 export interface ApiErrorPayload {
