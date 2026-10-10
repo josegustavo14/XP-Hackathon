@@ -14,6 +14,34 @@ export interface SourceRef {
   updated_at: string | null;
 }
 
+export interface CopilotChatRequest {
+  session_id: string | null;
+  message: string;
+  client_id: string | null;
+}
+
+export interface CopilotSource {
+  type: string;
+  id: string;
+  label: string;
+  updated_at: string | null;
+}
+
+export interface CopilotSuggestedAction {
+  type: string;
+  label: string;
+  target_id: string;
+}
+
+export interface CopilotChatResponse {
+  session_id: string;
+  message_id: string;
+  answer: string;
+  sources: CopilotSource[];
+  suggested_actions: CopilotSuggestedAction[];
+  disclaimer: string;
+}
+
 export interface ClientSummary {
   id: string;
   name: string;
@@ -71,5 +99,6 @@ export interface ApiErrorPayload {
     code?: string;
     message?: string;
     details?: Record<string, unknown>;
+    trace_id?: string;
   };
 }

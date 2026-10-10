@@ -84,3 +84,12 @@ class AiLogKind(StrEnum):
     CHAT = "chat"
     BRIEFING = "briefing"
     ALERT_EXPLANATION = "alert_explanation"
+
+
+class NewsMatchType(StrEnum):
+    """Vínculo determinístico entre uma notícia e uma carteira."""
+
+    HOLDS_ASSET = "holds_asset"
+    ISSUER_EXPOSURE = "issuer_exposure"
+    ASSET_CLASS = "asset_class"
+    MACRO = "macro"
