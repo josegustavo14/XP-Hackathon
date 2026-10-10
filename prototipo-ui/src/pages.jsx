@@ -22,6 +22,8 @@ const parseBR = (s) => {
   return new Date(y, m - 1, d);
 };
 const daysUntil = (s) => Math.round((parseBR(s) - TODAY) / 86400000);
+const SEVERITY_ORDER = { Alta: 0, "Média": 1, Baixa: 2 };
+const bySeverity = (a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity];
 const filterClients = (query, risk) =>
   clients.filter((x) => x.name.toLowerCase().includes(query.toLowerCase()) && (risk === "Todos" || x.risk === risk));
 
@@ -161,6 +163,43 @@ function ClientTable({ rows }) {
 
 /* ------------------------------ Visão geral ------------------------------ */
 
+// "Seu dia": até 3 próximos passos montados a partir dos alertas e da agenda.
+function NextSteps({ open }) {
+  const { go } = useStore();
+  const sorted = [...open].sort(bySeverity);
+  const first = sorted[0];
+  const meeting = [...clients].sort((a, b) => daysUntil(a.contact) - daysUntil(b.contact))[0];
+  const third = sorted.find((a) => a !== first && a.type === "Oportunidade") || sorted.find((a) => a !== first);
+  const steps = [
+    first && { key: `a${first.id}`, tone: severityTone(first.severity), tag: `Alerta · ${first.severity} prioridade`, title: first.title, who: clientById(first.cid).name, cta: "Analisar alerta", run: () => go("alertDetail", first.id) },
+    { key: `m${meeting.id}`, tone: "blue", tag: `Reunião · em ${daysUntil(meeting.contact)} dias`, title: `Preparar conversa com ${meeting.name.split(" ")[0]}`, who: meeting.objective, cta: "Gerar briefing", run: () => go("briefing", meeting.id) },
+    third && { key: `a${third.id}`, tone: severityTone(third.severity), tag: `${third.type} · ${third.severity} prioridade`, title: third.title, who: clientById(third.cid).name, cta: "Analisar alerta", run: () => go("alertDetail", third.id) },
+  ].filter(Boolean);
+
+  return (
+    <Card className="mb-5">
+      <SectionHead title="Seu dia" subtitle={`${steps.length} próximos passos sugeridos a partir dos alertas e da agenda`} />
+      <ol className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0 lg:pb-0">
+        <AnimatePresence initial={false} mode="popLayout">
+          {steps.map((x, i) => (
+            <motion.li key={x.key} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97 }} className="flex w-[82%] shrink-0 snap-start flex-col rounded-xl border border-slate-200 p-4 sm:w-[46%] lg:w-auto">
+              <div className="flex items-center gap-2.5">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary text-[11px] font-bold text-on-primary">{i + 1}</span>
+                <Badge tone={x.tone}>{x.tag}</Badge>
+              </div>
+              <p className="mt-3 text-sm font-semibold leading-snug text-slate-900">{x.title}</p>
+              <p className="mt-0.5 text-xs text-slate-500">{x.who}</p>
+              <Button className="mt-4 self-start" onClick={x.run}>
+                {x.cta} <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </motion.li>
+          ))}
+        </AnimatePresence>
+      </ol>
+    </Card>
+  );
+}
+
 export function Dashboard() {
   const { alerts, go } = useStore();
   const [range, setRange] = useState("12m");
@@ -177,17 +216,19 @@ export function Dashboard() {
         lead="Acompanhe sua base e comece pelas situações mais relevantes."
       />
 
+      <NextSteps open={open} />
+
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <Metric label="Clientes sob gestão" value={128} foot="6 perfis disponíveis na demonstração" icon={Users} />
+        <Metric label="Clientes na carteira" value={clients.length} foot="Amostra da demonstração" icon={Users} />
         <Metric label="Precisam de atenção" value={new Set(open.map((x) => x.cid)).size} foot="Com alertas em aberto" icon={AlertTriangle} accent="text-amber-600" />
         <Metric label="Alertas em aberto" value={open.length} foot="Priorizados por gravidade" icon={Bell} accent="text-red-500" />
-        <Metric label="Patrimônio exibido" value={total} format={(n) => money(Math.round(n))} foot="Base fictícia dos perfis" icon={Wallet} accent="text-emerald-600" />
+        <Metric label="Patrimônio sob gestão" value={total} format={(n) => money(Math.round(n))} foot={`Soma dos ${clients.length} clientes`} icon={Wallet} accent="text-emerald-600" />
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(300px,.8fr)]">
         <Card>
-          <SectionHead title="Prioridades de atendimento" subtitle="Alertas identificados na base de demonstração" action={<Button onClick={() => go("alerts")}>Ver todos</Button>} />
-          <AlertTable compact rows={open.slice(0, 4)} />
+          <SectionHead title="Prioridades de atendimento" subtitle="Pendentes, da maior para a menor gravidade" action={<Button onClick={() => go("alerts")}>Ver todos</Button>} />
+          <AlertTable compact rows={[...open].sort(bySeverity).slice(0, 4)} />
         </Card>
         <Card>
           <SectionHead title="Atendimentos próximos" />
@@ -560,7 +601,7 @@ export function Copilot() {
       <PageTitle kicker="Inteligência aplicada" title="Copiloto IA" lead="Consulte os dados dos clientes usando linguagem natural e verifique as fontes." />
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(290px,.8fr)]">
         <Card className="flex min-h-[520px] flex-col">
-          <SectionHead title="Conversa com o assistente" subtitle="Respostas produzidas para a base fictícia" action={<Badge tone="gold">Demonstração</Badge>} />
+          <SectionHead title="Conversa com o assistente" subtitle="Respostas produzidas para a base fictícia" action={<Badge>Demonstração</Badge>} />
           <ChatThread
             chat={chat}
             typing={typing}
@@ -663,7 +704,7 @@ export function Briefing() {
       <PageTitle kicker="Inteligência / Briefing" title={`Briefing — ${x.name}`} lead="Resumo contextualizado para apoiar o próximo atendimento." action={<Button onClick={() => go("briefings")}><ArrowLeft className="h-3.5 w-3.5" /> Todos os briefings</Button>} />
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(290px,.8fr)]">
         <Card>
-          <SectionHead title="Preparação da reunião" action={<Badge tone="gold">Revisão obrigatória</Badge>} />
+          <SectionHead title="Preparação da reunião" action={<Badge tone="blue">Revisão obrigatória</Badge>} />
           {phase === "idle" && (
             <>
               <p className="mb-4 text-sm text-slate-500">Gere uma pauta considerando cadastro, investimentos e histórico do cliente.</p>
@@ -757,7 +798,7 @@ export function Sources() {
                 <Td><span className="inline-flex items-center gap-2 font-semibold text-slate-800"><Building2 className="h-3.5 w-3.5 text-slate-400" />{r[0]}</span></Td>
                 <Td>{r[1]}</Td>
                 <Td>{r[2]}</Td>
-                <Td><Badge tone="gold">Demonstrativo</Badge></Td>
+                <Td><Badge>Demonstrativo</Badge></Td>
               </AnimatedRow>
             ))}
           </tbody>

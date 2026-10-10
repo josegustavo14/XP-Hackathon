@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
-import { AlertTriangle, ArrowUpRight, Clock, Info, Newspaper, RefreshCw, Users } from "lucide-react";
+import { ArrowUpRight, Clock, Info, Newspaper, RefreshCw, Users } from "lucide-react";
 
 // Contrato do futuro coletor (backend): GET /news.json
 // { updatedAt, items: [{ id, title, summary, source, url, publishedAt, topics, clientIds, period? }] }
@@ -98,8 +98,8 @@ function PeriodTabs({ value, onChange, layoutId }) {
 function FeedStatus({ isDemo, updatedAt }) {
   if (isDemo) {
     return (
-      <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
-        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+      <div className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
+        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
         <p>
           <strong className="font-semibold">Exemplos fictícios — não são notícias reais.</strong> Substitua pelo feed coletado e validado no backend.
         </p>
@@ -140,7 +140,7 @@ function NewsCard({ item, relatedCount, contextLabel }) {
         {item.summary}
       </p>
 
-      <div className="mb-4 mt-4 flex items-center gap-2 rounded-md bg-amber-50 px-2.5 py-1.5 text-[11px] font-medium text-amber-700">
+      <div className="mb-4 mt-4 flex items-center gap-2 rounded-md bg-blue-50 px-2.5 py-1.5 text-[11px] font-medium text-blue-700">
         <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />
         {item.clientIds?.length ? `Relacionada a ${relatedCount} cliente(s) ${contextLabel}` : "Notícia geral"}
       </div>

@@ -47,7 +47,7 @@ export default function CopilotWidget() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-semibold text-slate-900">Copiloto IA</h2>
-                  <Badge tone="gold">Demonstração</Badge>
+                  <Badge>Demonstração</Badge>
                 </div>
                 <p className="truncate text-[11px] text-slate-500">Consulta apenas a base fictícia</p>
               </div>

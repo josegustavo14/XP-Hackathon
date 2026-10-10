@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AnimatePresence, animate, motion, useInView, useReducedMotion } from "framer-motion";
-import { CheckCircle2, ChevronRight, Moon, Sun } from "lucide-react";
+import { CheckCircle2, ChevronRight, Info, Moon, Sun } from "lucide-react";
 
 const BADGE = {
   neutral: "bg-slate-100 text-slate-600",
@@ -82,7 +82,13 @@ export function PageTitle({ kicker, title, lead, action }) {
 }
 
 export function Helper({ children, className = "" }) {
-  return <div className={`rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-xs leading-relaxed text-amber-900 ${className}`}>{children}</div>;
+  // Aviso informativo neutro: âmbar e vermelho ficam reservados para prioridade.
+  return (
+    <div className={`flex items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-relaxed text-slate-600 ${className}`}>
+      <Info className="mt-px h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
+      <div>{children}</div>
+    </div>
+  );
 }
 
 // Número que conta a partir de zero quando entra na tela.
